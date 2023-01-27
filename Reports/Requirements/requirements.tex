@@ -84,32 +84,14 @@ numberstyle = \tiny,
   morecomment=[l]\%,
 }
 \begin{document}
-\begin{titlepage}
 \begin{center}
-\large
-University of Warwick \\
-Department of Computer Science \\
-\huge
-\vspace{50mm}
-\rule{\linewidth}{0.5pt} \\
-CS261 \\
-\vspace{5mm}
-\Large
-Software Engineering
-\rule{\linewidth}{0.5pt}
-\vspace{5mm}
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.4\textwidth]{crest_black.eps}
-\end{figure}
-\vspace{37mm}
-Requirements Analysis Report \\
-\today
+	\hline
+	\vspace{0.5cm}
+	\Huge
+	CS261: Requirements Report
+	\vspace{0.4cm}
+	\hline
 \end{center}
-\end{titlepage}
-\newpage
-\tableofcontents
-\newpage
 \section{Team Organisation}
 \subsection{Roles}
 For a team of $6$ people, we have assigned a total of $3$ unique roles: project manager, research/business analytics, and software developers. The breakdown for each individual is as follows:
@@ -120,7 +102,8 @@ For a team of $6$ people, we have assigned a total of $3$ unique roles: project 
 \end{itemize}
 We have further broken down the software engineering team to a total of $3$ back end and $1$ front end member. The front end software engineer was determined to be Aris Papakonstantinou.
 \subsection{Methodology}
-Important decisions with regards to the project are generally taken democratically to ensure the engagement and agreement of most if not all team members. Our main methodology utilised are scrums. Scrum was found to be the most suitable: the customer only wants a single delivery, the scope is unclear and timescale is unclear, and we all undergraduate students, meaning that we have little project experience. Our scrum master was assigned to be Andreea Nicolae. Meetings were democratically agreed to be organised with a minimum of set $2 $ meetings a week, every Friday (in-person) and Monday (online). We have also agreed upon having small or urgent meeting opportunities when required.
+Important decisions with regards to the project are generally taken democratically to ensure the engagement and agreement of most if not all team members. Our main methodology utilised are scrums. Scrum was found to be the most suitable: the customer only wants a single delivery, the scope is unclear and timescale is unclear, and we all undergraduate students, meaning that we have little project experience. Our scrum master was assigned to be Andreea Nicolae. Meetings were democratically agreed to be organised with a minimum of set $2 $ meetings a week, every Friday (in-person) and Monday (online). We have also agreed upon having small or urgent meeting opportunities when required. \\
+\hline
 \section{Functional Requirements}
 \subsection{Tracking}
 The tracking of our software will be conducted through linkings to a repository from GitHub and semi-frequent surveys. (will the user link their account or the public repository?). Specifically, GitHub will enable us to track multiple useful statistics that will aid us with risk assessment of the project, e.g., code, commit data with dates i.e., deadlines, how regularly the project is updated, bug reports and tags. Surveys will help us analyse trends of soft metrics of a project. The manager is further able to edit any input hard metric data later in the future if any changes in the plan are present. The tracked data and evaluated riskiness will be output through the website only through manager's account, presented in the website using graphs and percentages of factors such as budget, time, completion etc. The outputs themselves, we have decided, will be different depending on each person's role in the project, based upon a role-based hierarchy. Possible roles include, but are not limited to: software engineer, project manager, back end lead, front end lead, etc. \\
@@ -159,7 +142,9 @@ The initial model will be initialised using data that is provided by research. W
 \end{itemize}
 We could further prompt for further updates during project lifetime e.g., 3 month reviews. Lastly, the back end of our system has been agreed to consist of unsupervised learning. The result of project fed back into artificial intelligence (AI). Depending on the outcome of the project, the AI will adjust the weightings of factors and metrics that is used in risk calculation. \\
 
-\noindent Initially, the project will be filled with existing public data of successful and failed projects. Using the existing data, the algorithm will be able to analyse and differentiate what makes up of a successful project through its trends, and give suggestions accordingly for hard metrics. Hard metrics mainly consist of numerical data, therefore, their suggestions will be straightforward and analysable i.e., number changing. For soft metrics that mainly consist of social problems, existing analysis and data of suggestions exists in [The Book] in case of a detected low trend.
+\noindent Initially, the project will be filled with existing public data of successful and failed projects. Using the existing data, the algorithm will be able to analyse and differentiate what makes up of a successful project through its trends, and give suggestions accordingly for hard metrics. Hard metrics mainly consist of numerical data, therefore, their suggestions will be straightforward and analysable i.e., number changing. For soft metrics that mainly consist of social problems, existing analysis and data of suggestions exists in [The Book] in case of a detected low trend.\\
+
+\hline
 \section{Non-Functional Requirements}
 \subsection{User Interface}
 The software in our project will be minimal by design i.e., limited colour palette, minimal text, easy to navigate, as it was requested that the system is "suitable for non-technical users" and "should be intuitive and require little to no training". Consequently, our website will consist of well-labeled user interface with little user interaction other than clicking and entering text. Furthermore, there is a potential for implementation of an FAQ or even video tutorials on the usage, if found suitable. \\
