@@ -1,15 +1,20 @@
 \documentclass[a4paper]{article}
 
 \usepackage[utf8]{inputenc}
+\usepackage{chngpage}
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage{listings}
 \usepackage{lmodern}
 \usepackage{amsfonts}
 \usepackage{lipsum}
-\usepackage[left=1in, right=1in, bottom=1in, top=1in]{geometry}
+\usepackage[left=0.7in, right=0.7in, bottom=0.7in, top=0.7in]{geometry}
 \usepackage{amsthm}
 \usepackage{tcolorbox}
+\usepackage{relsize}
+\usepackage{titlesec}
+\usepackage{makecell}
+\usepackage{titletoc}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{graphicx}
@@ -84,75 +89,110 @@ numberstyle = \tiny,
   morecomment=[l]\%,
 }
 \begin{document}
+\hline
 \begin{center}
-	\hline
-	\vspace{0.5cm}
-	\Huge
-	CS261: Requirements Report
-	\vspace{0.4cm}
-	\hline
+	\vspace{1mm}
+	\Huge CS261 Requirements Report
 \end{center}
-\section{Team Organisation}
-\subsection{Roles}
-For a team of $6$ people, we have assigned a total of $3$ unique roles: project manager, research/business analytics, and software developers. The breakdown for each individual is as follows:
-\begin{itemize}
-	\item  Project Manager - Andreea Nicolae
-	\item Research/Business Analytics - Raihanah Lukman
-	\item Software Engineer - Heath Nicholson, Aris Papakonstantinou, Billy Pentney, Cem Yilmaz
-\end{itemize}
-We have further broken down the software engineering team to a total of $3$ back end and $1$ front end member. The front end software engineer was determined to be Aris Papakonstantinou.
-\subsection{Methodology}
-Important decisions with regards to the project are generally taken democratically to ensure the engagement and agreement of most if not all team members. Our main methodology utilised are scrums. Scrum was found to be the most suitable: the customer only wants a single delivery, the scope is unclear and timescale is unclear, and we all undergraduate students, meaning that we have little project experience. Our scrum master was assigned to be Andreea Nicolae. Meetings were democratically agreed to be organised with a minimum of set $2 $ meetings a week, every Friday (in-person) and Monday (online). We have also agreed upon having small or urgent meeting opportunities when required. \\
 \hline
-\section{Functional Requirements}
-\subsection{Tracking}
-The tracking of our software will be conducted through linkings to a repository from GitHub and semi-frequent surveys. (will the user link their account or the public repository?). Specifically, GitHub will enable us to track multiple useful statistics that will aid us with risk assessment of the project, e.g., code, commit data with dates i.e., deadlines, how regularly the project is updated, bug reports and tags. Surveys will help us analyse trends of soft metrics of a project. The manager is further able to edit any input hard metric data later in the future if any changes in the plan are present. The tracked data and evaluated riskiness will be output through the website only through manager's account, presented in the website using graphs and percentages of factors such as budget, time, completion etc. The outputs themselves, we have decided, will be different depending on each person's role in the project, based upon a role-based hierarchy. Possible roles include, but are not limited to: software engineer, project manager, back end lead, front end lead, etc. \\
-
-\noindent Democratically, we have decided that only the manager will have the permission to view the team's statistics and riskiness. Sharing the riskiness of the project with the client may prove to be disadvantageous for the project i.e., the client may decide on cancelling the project after the risk assessment. We believe that this decision is exclusive to the project management team. Furthermore, sharing the progress of the riskiness of the project with the non-senior team may prove to be demotivating or a source of low team morale if it is found that the project is risky. As such, this information will be limited to only certain members of the project. Additionally, a could have feature would be the output of the riskiness and diagrams to be in a saveable pdf output for the manager so they can share or print the output externally.
-\subsection{Metrics}
-We have split the definition of metrics into two: hard metrics and soft metrics. Hard metrics mainly concern of factors that are measurable directly and is the initial input of the project into our system. These include, but are not limited to factors such as budget, experience of employees, code in GitHub, deadlines, etc. Soft metrics has been defined to be the each team member's view, morale and motivation of the project. \\
-
-\noindent It is vital that we gain data of these metrics from the participants of the project, especially of soft metrics (citation here). We have decided that the method of gaining hard metrics would primarily be through the initial risk assessment. However, the soft metrics would require to be measured in a regular time through surveys of all members. The survey would be done through their account in our website at a regular basis. This "regular basis" can be determined by the project manager, with a suggested time frame. Consequently, we have also highlighted the idea that such a survey will be short to minimise burden of the members of the project. Lastly, whilst it is not necessary that every team member fills the survey, the larger the sample size of the participants, the more accurate the risk assessment presented. It is recommended by our software that the majority of the project participants fill in the survey. Otherwise, the project would be warned to be at risk due to lack of engagement, which is an important factor of success (citation here) of a project. \\
-
-\noindent A comprehensive list of hard metrics and soft metrics has been determined within our team. The hard metrics are as follows:
+\section*{Team Organisation}
+\subsection*{Roles}
+For a team of 6 people, we have assigned the following roles:
 \begin{itemize}
-	\item \textbf{Budget} - the initial capital investment onto the project is important as it can determine whether it is sufficient and can be compared to trends that are proven to be successful from our learning algorithm to then output correct suggestions i.e., what budget really is required according to team size and expertise.
-	\item \textbf{Complexity} - complexity of a project is a necessary measurement, as it can determine the likelihood of success. A highly complex project can be suggested to be broken down to less complex parts for digestion and ease of work.
-	\item \textbf{Expertise} - this hard metric is necessary to ensure that technical know-how is sufficient depending on the complexity of the project. This is measured when a user is signed up e.g., years of experience within their related field of the project. If an expertise of a project is found to be critical, it will be suggested that the project hires new employees with required amount of expertise, whilst maintaining an optimal team size.
-	\item \textbf{Team size} - a hard metric that aid us in measuring workflow and scale of operation, where there machine will give suggestions according to learned economies of scale. This will be measured by the number of registered members for a specific project. Too many members would require to some to be dismissed from the project, too little would be that new members are required, all according to already existing data of expertise.
-	\item \textbf{Time frame} - we are required to know if the project is able to deliver according to their own deadlines, so that the riskiness can be adjusted accordingly. This can be addressed by re-adjusting the existing time frames accordingly to the trends of that project.
-	\item \textbf{Meeting requirements} - we are also required to know if the project is able to deliver all things that are requested from the customer.                                    
-	\item \textbf{Code} - code is an essential bit of a software project, can be used to determine the quality of the project. Poor code and code management can result the failure of a project. Poor code can be caused by many factors e.g., lack of documentation, which will be analysed and suggested accordingly.
+	\item \textbf{Project Manager} - Andreea Nicolae 
+	\item \textbf{Research} - Raihanah Lukman
+	\item \textbf{Software Engineer} - Heath Nicholson, Aris Papakonstantinou, Billy Pentney, Cem Yilmaz
 \end{itemize}
-The soft metrics have been determined as follows:
+This decision was made based on an initial assessment of each member’s strong points and how they feel they could contribute best to the project. The project manager is responsible for organising the team and making sure deadlines are met. Additionally, the researcher’s role is to bring valuable information to the group ensuring that any decisions made in design and requirements are backed-up with research. The development team was naturally divided based on everyone’s individual skill and past experience.
+\subsection*{Methodology}
+Our methodology is an agile approach inspired by Scrum. We decided we wanted to work in cycles, with each cycle achieving a set of requirements, similar to the scrum cycles. A member of the development team will take a similar role to that of the Scrum master and ensure the deadlines are being met. However, since we are all undergraduate students with little experience, we could not fully implement Scrum since we are not familiar with it. Additionally, due to the nature of the project, we are unable to interface directly with the client, so the scrum methodology would not work. Instead we have opted for creating a plan for the development with weekly cycles that we can check the progress of. This works for us since we have a clear deadline and the requirements are already set out from the beginning. \\
+
+\noindent Important decisions with regards to the project are generally taken democratically to ensure the engagement and agreement of all team members. Meetings were agreed to be organised with a minimum of 2 meetings a week, every Monday (online) and Friday (in-person). We have also agreed upon having small or urgent meeting opportunities when required.
+\section*{Functional Requirements}
+\subsection*{Account Management}
+\textbf{R.1} - A manager must be able to create and login to/logout from a password-protected account with the system using their email address.\\
+
+	\textbf{R.1.1} - Each user should have access to the following utilities:
 \begin{itemize}
-	\item 
+	\item Create multiple projects
+	\item Mark a project as completed, or terminate it
+	\item Add or remove deadlines for sections of the project, and mark them as met or not
+	\item Add or remove the emails of team members for the given project, for data-collection purposes
+	\item View the project metrics stored by our software for the project and receive any suggestions the software has
+	\item View all the projects they manage
 \end{itemize}
-\subsection{Riskiness}
-The riskiness of the project will be evaluated through an initial input of data done by the project manager, and further, it is necessary that most of it not all project members sign up to the project using our website to maximise the accuracy of the risk assessment. The initial input will consist of hard metrics such as the budget, estimated time frames, team members, topics related to development i.e., tools/techniques in use and methodology (how do we measure topics?). The system will further keep track of the project's phase and soft metrics in each phase e.g., planning, concept, design, implementation, deployment, etc. as factors of risk are different for each phase (citation). This will be done through user input, e.g., surveys. Technical updates will be done through the linkage to GitHub repositories. Risk calculation will be done using through the use of most hard metrics and soft metrics.\\
+\par\textbf{R.1.2} - If a user is logged in on a device and attempts to login on another device, the attempt should be denied and a prompt will be displayed to log out of the first device.
+\subsection*{Metrics}
+\textbf{R.2} - The software will measure a number of metrics about each tracked project in order to generate the risk assessment and provide appropriate suggested actions. \\
 
-\noindent It is further essential that input can be taken throughout the project to edit any changes to any of the hard metrics. We have decided that the project's manager can adjust the project's hard metrics such as the time frame, budget, etc. The risk assessment will be adjusted accordingly after each update or a specific time frame (why not have an update button?). With such updates, the back end algorithm will analyse the trends and output a risk assessment accordingly with the new data.
+\noindent We have split the definition of metrics into two categories. Hard metrics are objective factors of a project that are prompted as an input during the creation of a project in our software and updated throughout. Soft metrics are defined as factors that are subjective - i.e. project attributes which are dependent on opinions and emotions of members of the team.\\
 
-\subsection{Use of Existing Data}
-The initial model will be initialised using data that is provided by research. When a project is marked complete, our system will prompt the manager to input a final summary. The final summary consists of the following:
-\begin{itemize}
-	\item Rate perceived degree of success
-	\item Total cost
-	\item Time of completion
-\end{itemize}
-We could further prompt for further updates during project lifetime e.g., 3 month reviews. Lastly, the back end of our system has been agreed to consist of unsupervised learning. The result of project fed back into artificial intelligence (AI). Depending on the outcome of the project, the AI will adjust the weightings of factors and metrics that is used in risk calculation. \\
+\noindent\textbf{Hard Metrics} \\
 
-\noindent Initially, the project will be filled with existing public data of successful and failed projects. Using the existing data, the algorithm will be able to analyse and differentiate what makes up of a successful project through its trends, and give suggestions accordingly for hard metrics. Hard metrics mainly consist of numerical data, therefore, their suggestions will be straightforward and analysable i.e., number changing. For soft metrics that mainly consist of social problems, existing analysis and data of suggestions exists in [The Book] in case of a detected low trend.\\
-
+\indent \textbf{R.2.1} - The Hard Metrics will be provided by the Manager via user input\\
+\indent \textbf{R.2.2} - Hard Metrics related to the code can be gathered directly by linking a Github repository
+\begin{table}[H]
+\begin{adjustwidth}{-.5in}{-.5in}
+	\centering
+	\label{tab:label}
+	\begin{tabular}{|c|c|c|}
+		\hline
+	\textbf{Metric}& \textbf{Definition} & \textbf{Reasoning}\\
+	\hline
+	Budget & The fund allocated for the project & \makecell{To generate a budget trajectory \\ To check if the project is on track to be completed with the funds allocated} \\
 \hline
-\section{Non-Functional Requirements}
-\subsection{User Interface}
-The software in our project will be minimal by design i.e., limited colour palette, minimal text, easy to navigate, as it was requested that the system is "suitable for non-technical users" and "should be intuitive and require little to no training". Consequently, our website will consist of well-labeled user interface with little user interaction other than clicking and entering text. Furthermore, there is a potential for implementation of an FAQ or even video tutorials on the usage, if found suitable. \\
-\subsection{Technicalities}
+	Bug Tracking & \makecell{The number of known bugs \\ and issues  which are retrieved \\ from the linked GitHub repository} & To determine the proportion of outstanding bugs/issues \\
+	\hline
+	\makecell{Commit \\ Frequency} & \makecell{The mean time between commits to \\ the linked Github  repository} & \makecell{To determine how frequently the code-base is \\ updated/the activity of the development team} \\
+	\hline
+	Timeframe & \makecell{The project’s various internal deadlines \\as well as the final deadline} & \makecell{To track the progress of a project through \\ the number of deadlines met/postponed} \\
+	\hline
+	Team Size & \makecell{The number of members in \\ the project's development team} & \makecell{To measure the scale of the project; to ensure \\ the budget is appropriate for the project size}\\
+	\hline
+	Expertise & \makecell{The software-development \\ experience of each team member} & \makecell{ To measure the sufficiency of skilled software engineers for a \\ project; to ensure the budget is appropriate for the team’s skill level }\\
+	\hline
+	\end{tabular}
+\end{adjustwidth}
+\end{table}
+\noindent We have decided that the software should not consider code quality, as this metric is particularly difficult to measure and outsourcing the quality-check to third-party software presents a potential security risk. \\\
 
-\subsection{Account Management}
-Our system will incorporate a simple account management system. Users will be able to create, login, logout and delete a local password-protected account with our software. Each user is able to create any number of project profiles, each with a title, team, deadlines, keywords, data on hard metrics and methodology. Creator of a project can may further grant access to other users in the system with permissions such as read, write, full access. Only people with full access can view the project's riskiness and suggestions. A user can only view projects which they have read access to. \\
+\noindent\textbf{Soft Metrics}\\
 
-\noindent Furthermore, each project can be linked to an online repository such as GitHub. The project status such as bug reports, commits are stored locally and synchronised with the repository  when an internet connection becomes available. Project status, on the other hand, can be updated via our software if and only if permissible and viewed as a graph describing changes against time. 
-
+\indent \textbf{R.2.3} - The data for soft metrics will be collected via short periodic surveys which must be completed by each member of the team.\\
+\indent \textbf{R.2.4} - A unique, initial survey will be sent out to gather some of the data when a team member is added by the manager.
+\vspace{8cm}
+\subsection*{Risk Assessment}
+\textbf{R.3.1} - When a project is first created by the manager, the system’s Risk-Assessment model will provide an estimation of project riskiness based on the initial Hard Metrics. \\
+\textbf{R.3.2} - After each Manager update to the project, the system will identify new data for the Hard Metrics and update the Risk-Assessment accordingly. \\
+\textbf{R.3.3} - When the Risk Assessment is generated, the manager should be presented with a list of suggested actions which could be taken to reduce the risk, and this list is ordered by importance and relevance to the project.
+\subsection*{Evolution}
+\textbf{R.4.1} - When a project is marked as complete by the manager, our system will prompt the manager to input a final summary, evaluating the success of the project.
+\begin{itemize}
+	\item The response provided by the Manager will be fed back into the Risk-Assessment model, to influence the assessments it provides for future projects managed via the software.
+\end{itemize}
+\textbf{R.4.2} - After project completion, the software could continue to prompt the manager for regular project updates (e.g. $3$-month reviews), in order to monitor the success of the project over its lifetime and evolution. 
+\begin{itemize}
+	\item This element should not be overlooked as costs during the Maintenance stage are estimated to represent $90\%$ of the cost of a Software-Development project (CITE).
+\end{itemize}
+\subsection*{Visualisation of Output}
+\textbf{R.5.1} - When viewing a project, the system will display tracked project metrics along with providing appropriate suggestions.
+\begin{itemize}
+	\item The suggestions will be classified as High Priority and Low Priority based on the risk assessment. 
+\end{itemize}
+\textbf{R.5.2} - Project Analytics are presented visually, with graphs for:
+\begin{itemize}
+	\item Timeline / tasks deadline (stacked bar chart, similar to a gantt chart)
+	\item Budget trajectory (Line graph with forecast)
+	\item Risk-level, over-time (Line graph)
+\end{itemize}
+\textbf{R.5.3} - The project statistics and suggestions can be downloaded as a PDF file which can be shared with the rest of the team or the client if needed.
+\section*{Non-Functional Requirements} 
+\textbf{R.6.1} - The software must be accessible via a website with a succinct but well-labelled user interface. That way, the software will be intuitive and accessible for non-technical users. \\
+\textbf{R.6.2} - The software will require little user interaction other than clicking and entering text making it as easy to use as possible. Furthermore, an “information” or “question mark” icon may be conveniently placed within the page consisting of helpful tutorials or tips for new users. This way, users can receive the minimal training they might need when using the software.\\
+\textbf{R.6.3} - System compatibility and extensibility
+\begin{itemize}
+	\item The system must be accessible via Google Chrome version 109.0.5414.119 running on Windows 10 10.0.19045 Build 19045
+	\item Consequently, it should run in other modern browsers and could be designed to run at mobile-friendly resolutions 
+	\item The load time of the website should be under one second depending on the host’s throughput. The expected uptime of the website should be above $95\%$ meaning that the website will almost always be up unless unprecedented circumstances occur.
+\end{itemize}
 \end{document}
