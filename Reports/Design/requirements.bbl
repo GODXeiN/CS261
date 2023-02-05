@@ -1,0 +1,159 @@
+\begin{thebibliography}{}
+
+\bibitem [\protect \citeauthoryear {%
+Kanade%
+}{%
+Kanade%
+}{%
+{\protect \APACyear {2022}}%
+}]{%
+kanade_2022}
+\APACinsertmetastar {%
+kanade_2022}%
+\begin{APACrefauthors}%
+Kanade, V.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{Jun}{}.
+\newblock
+\APACrefbtitle {Linear regression vs. logistic regression: Understanding 13 key
+  differences.} {Linear regression vs. logistic regression: Understanding 13
+  key differences.}
+\newblock
+\begin{APACrefURL}
+  \url{https://www.spiceworks.com/tech/artificial-intelligence/articles/linear-regression-vs-logistic-regression/}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Krekel%
+}{%
+Krekel%
+}{%
+{\protect \APACyear {2023}}%
+}]{%
+krekel_2023}
+\APACinsertmetastar {%
+krekel_2023}%
+\begin{APACrefauthors}%
+Krekel, H.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2023}{Jan}{}.
+\newblock
+\APACrefbtitle {pytest Documentation.} {pytest documentation.}
+\newblock
+\begin{APACrefURL}
+  \url{https://buildmedia.readthedocs.org/media/pdf/pytest/latest/pytest.pdf}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Pedregosa%
+\ \protect \BOthers {.}}{%
+Pedregosa%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2011}}%
+}]{%
+scikit-learn}
+\APACinsertmetastar {%
+scikit-learn}%
+\begin{APACrefauthors}%
+Pedregosa, F.%
+, Varoquaux, G.%
+, Gramfort, A.%
+, Michel, V.%
+, Thirion, B.%
+, Grisel, O.%
+\BDBL {}Duchesnay, E.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2011}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Scikit-learn: Machine Learning in {P}ython}
+  {Scikit-learn: Machine learning in {P}ython}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Journal of Machine Learning
+  Research}{12}{}{2825--2830}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Salem%
+, Rekab%
+\BCBL {}\ \BBA {} Whittaker%
+}{%
+Salem%
+\ \protect \BOthers {.}}{%
+{\protect \APACyear {2004}}%
+}]{%
+billy}
+\APACinsertmetastar {%
+billy}%
+\begin{APACrefauthors}%
+Salem, A\BPBI M.%
+, Rekab, K.%
+\BCBL {}\ \BBA {} Whittaker, J\BPBI A.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2004}{}{}.
+\newblock
+{\BBOQ}\APACrefatitle {Prediction of software failures through logistic
+  regression} {Prediction of software failures through logistic
+  regression}.{\BBCQ}
+\newblock
+\APACjournalVolNumPages{Inf. Softw. Technol.}{46}{}{1-5}.
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+{SQLite Contributors}%
+}{%
+{SQLite Contributors}%
+}{%
+{\protect \APACyear {2022}}%
+}]{%
+sqlite}
+\APACinsertmetastar {%
+sqlite}%
+\begin{APACrefauthors}%
+{SQLite Contributors}.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{May}{}.
+\newblock
+\APACrefbtitle {How SQLite Is Tested.} {How sqlite is tested.}
+\newblock
+\begin{APACrefURL} \url{https://www.sqlite.org/testing.html} \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\bibitem [\protect \citeauthoryear {%
+Wilson%
+}{%
+Wilson%
+}{%
+{\protect \APACyear {2022}}%
+}]{%
+wilson_2022}
+\APACinsertmetastar {%
+wilson_2022}%
+\begin{APACrefauthors}%
+Wilson, F.%
+\end{APACrefauthors}%
+\unskip\
+\newblock
+\APACrefYearMonthDay{2022}{Sep}{}.
+\newblock
+\APACrefbtitle {Inherent Vs Residual Risk: Differences and Examples Explained -
+  nTask.} {Inherent vs residual risk: Differences and examples explained -
+  ntask.}
+\newblock
+\begin{APACrefURL}
+  \url{https://www.ntaskmanager.com/blog/inherent-vs-residual-risk/}
+  \end{APACrefURL}
+\PrintBackRefs{\CurrentBib}
+
+\end{thebibliography}

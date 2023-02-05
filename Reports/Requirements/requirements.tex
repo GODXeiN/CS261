@@ -92,7 +92,7 @@ numberstyle = \tiny,
 \hline
 \begin{center}
 	\vspace{1mm}
-	\Huge CS261 Requirements Report
+	\Huge CS261: Requirements Report
 \end{center}
 \hline
 \section*{Team Organisation}
@@ -159,40 +159,78 @@ Our methodology is an agile approach inspired by Scrum. We decided we wanted to 
 \noindent\textbf{Soft Metrics}\\
 
 \indent \textbf{R.2.3} - The data for soft metrics will be collected via short periodic surveys which must be completed by each member of the team.\\
-\indent \textbf{R.2.4} - A unique, initial survey will be sent out to gather some of the data when a team member is added by the manager.
-\vspace{8cm}
+\vspace{-0.55cm}
+\begin{itemize}
+	\item Surveys will be sent out periodically with the option for the manager to send out additional surveys.
+\end{itemize}
+\indent \textbf{R.2.4} - When a new team member is added to the project by the manager, the team member will be sent a unique, initial survey, to acquire information about their experience and expertise. 
+\begin{table}[H]
+	\centering
+	\caption{Soft Metrics Table \protect\cite{no}, \protect\cite{yes}}
+	\label{tab:softmetric}
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\textbf{Metric} & \textbf{Definition} & \textbf{Reasoning} \\
+		\hline
+		\makecell{Top-level \\ Management \\ Support} & \makecell{How the team members feel \\ regarding the top management's \\ commitment to the success of \\ project and how involved \\ executives are with team members} & \makecell{To measure the relationship of the company with the \\ project, including investment and significant of the \\ outcome. When upper-management is more involved,\\ the project may be subject to more scrutiny and higher \\ expectations, leading to pressure and chance of failure} \\
+		\hline
+		\makecell{Team \\ Communication} & \makecell{The level and quality of \\ communication between team \\ members to avoid issues or \\ tensions in the group} & \makecell{To determine how well the team discusses and \\ cooperates to ensure a successful project. A healthy \\ and productive discourse between team members is \\ more likely to result in constructive collaboration} \\
+		\hline
+		\makecell{Team \\ Commitment} & \makecell{The dedication that a team \\ member has to the success of \\ the project} & \makecell{To measure how dedicated the team is to the success of \\ the project. High Commitment means that an employee \\ is likely to put in additional effort, going above and \\ beyond to ensure the project meets its expectations} \\
+		\hline
+		\makecell{Team Morale} & \makecell{The overall attitude and \\ satisfaction of the team \\ members in the workplace} & \makecell{To measure the satisfaction of the team as overworked \\ and unhappy employees are more likely to make \\ mistakes or be reluctant to the commit to the project} \\
+		\hline
+	\end{tabular}
+\end{table}
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|c|c|c|}
+		\hline
+		\makecell{Degree of \\ Project Planning} & \makecell{The extent to which the \\ project's requirements are \\ thought-out and understood by \\ the team} & \makecell{To measure how well the specification has been \\ translated to a complete set of requirements and how \\ well the team members are aware of the aims of the \\ project} \\
+		\hline
+		
+	\end{tabular}
+\end{table}
 \subsection*{Risk Assessment}
 \textbf{R.3.1} - When a project is first created by the manager, the system’s Risk-Assessment model will provide an estimation of project riskiness based on the initial Hard Metrics. \\
-\textbf{R.3.2} - After each Manager update to the project, the system will identify new data for the Hard Metrics and update the Risk-Assessment accordingly. \\
-\textbf{R.3.3} - When the Risk Assessment is generated, the manager should be presented with a list of suggested actions which could be taken to reduce the risk, and this list is ordered by importance and relevance to the project.
-\subsection*{Evolution}
-\textbf{R.4.1} - When a project is marked as complete by the manager, our system will prompt the manager to input a final summary, evaluating the success of the project.
+
+\noindent\textbf{R.3.2} - After each Manager update to the project, the system will identify new data for the Hard Metrics and update the Risk-Assessment accordingly. \\
+
+\noindent\textbf{R.3.3} - When the Risk Assessment is generated, the manager should be presented with a list of suggested actions which could be taken to reduce the risk, and this list is ordered by importance and relevance to the project. \\
+
+\noindent\textbf{R.3.4} - When the Risk Assessment is generated, the manager should be presented with a list of suggested actions which could be taken to reduce the risk, and this list is ordered by importance and relevance to the project. \\
+
+\noindent\textbf{R.3.5} - When a project is marked as complete by the manager, our system will prompt the manager to input a final summary, evaluating the success of the project.
+\vspace{-0.15cm}
 \begin{itemize}
 	\item The response provided by the Manager will be fed back into the Risk-Assessment model, to influence the assessments it provides for future projects managed via the software.
 \end{itemize}
-\textbf{R.4.2} - After project completion, the software could continue to prompt the manager for regular project updates (e.g. $3$-month reviews), in order to monitor the success of the project over its lifetime and evolution. 
-\begin{itemize}
-	\item This element should not be overlooked as costs during the Maintenance stage are estimated to represent $90\%$ of the cost of a Software-Development project (CITE).
-\end{itemize}
 \subsection*{Visualisation of Output}
-\textbf{R.5.1} - When viewing a project, the system will display tracked project metrics along with providing appropriate suggestions.
+\textbf{R.4.1} - When viewing a project, the system will display tracked project metrics along with providing appropriate suggestions.
 \begin{itemize}
 	\item The suggestions will be classified as High Priority and Low Priority based on the risk assessment. 
 \end{itemize}
-\textbf{R.5.2} - Project Analytics are presented visually, with graphs for:
+\textbf{R.4.2} - Project Analytics are presented visually, with graphs for:
 \begin{itemize}
 	\item Timeline / tasks deadline (stacked bar chart, similar to a gantt chart)
 	\item Budget trajectory (Line graph with forecast)
 	\item Risk-level, over-time (Line graph)
 \end{itemize}
-\textbf{R.5.3} - The project statistics and suggestions can be downloaded as a PDF file which can be shared with the rest of the team or the client if needed.
+\textbf{R.4.3} - The project statistics and suggestions can be downloaded as a PDF file which can be shared with the rest of the team or the client if needed.
 \section*{Non-Functional Requirements} 
-\textbf{R.6.1} - The software must be accessible via a website with a succinct but well-labelled user interface. That way, the software will be intuitive and accessible for non-technical users. \\
-\textbf{R.6.2} - The software will require little user interaction other than clicking and entering text making it as easy to use as possible. Furthermore, an “information” or “question mark” icon may be conveniently placed within the page consisting of helpful tutorials or tips for new users. This way, users can receive the minimal training they might need when using the software.\\
-\textbf{R.6.3} - System compatibility and extensibility
+\textbf{R.5.1} - The software must be accessible via a website with a succinct but well-labelled user interface. That way, the software will be intuitive and accessible for non-technical users. \\
+\noindent\textbf{R.5.2} - A user must only be able to create an account with a password that has a minimum of 8 characters, contains at least one capital letter and number.
+\vspace{-0.15cm}
 \begin{itemize}
-	\item The system must be accessible via Google Chrome version 109.0.5414.119 running on Windows 10 10.0.19045 Build 19045
-	\item Consequently, it should run in other modern browsers and could be designed to run at mobile-friendly resolutions 
-	\item The load time of the website should be under one second depending on the host’s throughput. The expected uptime of the website should be above $95\%$ meaning that the website will almost always be up unless unprecedented circumstances occur.
+	\item If the password is not strong enough, then the user will be unable to click on the button and an alert will appear. 
 \end{itemize}
+\noindent\textbf{R.5.3} - The software will require little user interaction other than clicking and entering text making it as easy to use as possible. Furthermore, an “information” or “question mark” icon may be conveniently placed within the page consisting of helpful tutorials or tips for new users. This way, users can receive the minimal training they might need when using the software. \\
+
+\noindent\textbf{R.5.4} - The system must be accessible via Google Chrome version 109.0.5414.119 running on Windows 10 10.0.19045 Build 19045 \\
+
+\noindent\textbf{R.5.5} - Consequently, it should run in other modern browsers and could also provide support for mobile-friendly resolutions  \\
+
+\noindent\textbf{R.5.6} - The load time of the website should be under one second depending on the host’s throughput. The expected uptime of the website should be above $95\%$ meaning that the website will almost always be up unless unprecedented circumstances occur.
+\bibliographystyle{apacite}
+\bibliography{bibliography}
 \end{document}
