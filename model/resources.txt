@@ -1,0 +1,11 @@
+# Classification vs Regression (with examples)
+https://www.springboard.com/blog/data-science/regression-vs-classification/
+
+# Explanation of Logistic Regression + basic tutorial
+https://www.datacamp.com/tutorial/understanding-logistic-regression-python
+
+# Tutorial for Sklearn for classification models (basis for most of the code)
+https://towardsdatascience.com/building-classification-models-with-sklearn-6a8fd107f0c1
+
+# Numpy + Sklearn
+https://medium.com/personal-project/numpy-pandas-and-scikit-learn-explained-e7336baecedc
