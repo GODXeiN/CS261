@@ -1,4 +1,5 @@
 Prototype Files: 
+    
     * projectOld.py 
         - defines Project class; contains primitive hard metrics.
         - call .make(...) to initialise the project with random budget/deadline in a given range
@@ -27,6 +28,7 @@ Prototype Files:
 
 
 Version 2:
+    
     * project.py
         - (incomplete) successor of projectOld.py;
         - defines ProjectState class, describing project metrics at a given point
@@ -37,6 +39,10 @@ Version 2:
             2) simulate its development (including events which update metrics)
             3) when project complete, evaluate its success/failure
             4) return a list of states, all labelled with the success/failure metric
+            
+    * projectDf.py
+        - alternate version of project.py which uses a Pandas Dataframe to hold the project states (rather than using custom classes)
+        - simpler implementation and dev. will primarily continue on this version
 
     * genDataStaged.py
         - (incomplete) successor of genData.py
@@ -46,12 +52,13 @@ Version 2:
 
 
 TODO:
+
     * Choose events to simulate (e.g. addTeamMember(), delayDevelopment()... etc.)
-        * may need additional research for impact of contributing factors
-    * Design evaluation function ".evaluate(state)" which: 
+        - may need additional research for impact of contributing factors
+    * Design evaluation function ".evaluate(state)" which:  [STARTED]
         - receives the final project state
         - applies some function (maybe using the values Rai is working on)
-        - then returns Success or Failure
+        - then returns a score, which can be mapped to Success(1) or Failure(0)
     * Make method to return the success/failure and all states (so GenDataStaged.py can print)
     * Print the states, one per row (easy) 
         
