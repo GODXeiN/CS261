@@ -4,34 +4,37 @@ from projectDf import Project, populate_evaluation_coefficients
 # Generates a CSV file containing artificial project data
 # Considers project state at various points in development (incomplete)
 
-# file = open("testData.csv", 'w')
 
-# Projects to generate
-n = 1
+file = open("testDataStaged.csv", 'w')
+
+# Projects to be generated
+NUM_PROJECTS = 2000
+# Number of sample states to record for each project
+NUM_SAMPLES = 5
 
 # Units: 100k
 budgetMin = 1     # 100,000
-budgetMax = 100   # 10 million
+budgetMax = 1000   # 10 million
 budgetUnit = 10000 
 
 # Length of the shortest possible project
-deadlineMin = 50
+deadlineMin = 100
 # Length of the longest possible project
-deadlineMax = 100
-
-# headers = Project().get_headers()
-# hdrLine = headers[0]
-# for i in range(1, len(headers)):
-#     hdrLine += "," + headers[i]
-# file.write(hdrLine+"\n")
+deadlineMax = 1000
 
 populate_evaluation_coefficients()
 
-for i in range(0, n):
-    p = Project(budgetMin, budgetMax, budgetUnit, deadlineMin, deadlineMax)
-    p.simulate()
-    p.evaluate()
-    print(str(p))
-    # file.write(str(p)+"\n")
+totalSamples = 0
 
-print("\nGenerated", n, "projects")
+for i in range(0, NUM_PROJECTS):
+    p = Project(i,budgetMin, budgetMax, budgetUnit, deadlineMin, deadlineMax)
+    # Simulate the project's development till complete or cancelled
+    p.simulate()
+    # print(str(p))
+    
+    sampleDf = p.get_labelled_samples(NUM_SAMPLES)
+    totalSamples += len(sampleDf)
+    file.write(sampleDf.to_csv(header=(i==0), lineterminator='\n'))
+
+file.close()
+print("\nGenerated", NUM_PROJECTS, "projects, producing", totalSamples, "samples")
