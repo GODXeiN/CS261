@@ -9,3 +9,15 @@ https://towardsdatascience.com/building-classification-models-with-sklearn-6a8fd
 
 # Numpy + Sklearn
 https://medium.com/personal-project/numpy-pandas-and-scikit-learn-explained-e7336baecedc
+
+
+# Research for Simulation
+"On average, a developer creates 70 bugs per 1000 lines of code (!)
+ 15 bugs per 1,000 lines of code find their way to the customers
+ Fixing a bug takes 30 times longer than writing a line of code
+ 75% of a developer’s time is spent on debugging (1500 hours a year!) "
+https://www.openrefactory.com/intelligent-code-repair-icr/
+
+"Defect Density: 1/1000 lines of code"
+Not always full picture; requires defects to be known
+https://www.sealights.io/code-quality/defect-density-context-is-king/

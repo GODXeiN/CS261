@@ -12,12 +12,12 @@ n = 1
 # Units: 100k
 budgetMin = 1     # 100,000
 budgetMax = 100   # 10 million
-budgetUnit = 100000 
+budgetUnit = 10000 
 
 # Length of the shortest possible project
-deadlineMin = 200
+deadlineMin = 50
 # Length of the longest possible project
-deadlineMax = 1000
+deadlineMax = 100
 
 # headers = Project().get_headers()
 # hdrLine = headers[0]
@@ -29,9 +29,9 @@ populate_evaluation_coefficients()
 
 for i in range(0, n):
     p = Project(budgetMin, budgetMax, budgetUnit, deadlineMin, deadlineMax)
-    p.cancel()
-    print(str(p))
+    p.simulate()
     p.evaluate()
+    print(str(p))
     # file.write(str(p)+"\n")
 
-print("\nGenerated", n, "rows")
+print("\nGenerated", n, "projects")
