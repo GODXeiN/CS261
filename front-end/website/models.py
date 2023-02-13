@@ -3,7 +3,7 @@ from . import db
 from flask_sqlalchemy import SQLAlchemy
 
 # create the database interface
-db = SQLAlchemy()
+
 
 class Manager(db.Model):
     __tablename__='Manager'
