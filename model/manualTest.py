@@ -1,5 +1,9 @@
+## Tests the Logistic Regression Model with a single project 
+
+
 from joblib import load
-from projectDf import independent_headers
+from projectDf import SimProject, independent_headers
+
 from logregStaged import MODEL_SAVE_DEST
 
 
@@ -11,13 +15,11 @@ pipeLR = load(MODEL_SAVE_DEST)
 
 print("Manually Testing Model...")
 
-from projectDf import Project
-
-p = Project(10000,10,11,100000,500,2000)
+p = SimProject(10000,10,11,100000,500,2000)
 p.simulate()
 
-# Get a single sample from the project and transpose it
-pSample = p.get_labelled_samples(1).iloc[0].T
+# Get a single sample from the project
+pSample = p.get_labelled_samples(1).iloc[0]
 
 # Extract the headers for the prediction, then convert the project to an array, 
 # Then reshape to a matrix containing a single data-point vector

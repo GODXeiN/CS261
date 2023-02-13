@@ -3,12 +3,15 @@ import math
 import pandas as pd
 import numpy as np
 
+# TODO: make list of usages for each metric
+
+
 KEY_ID = 'pID'
 # Hard metrics
 KEY_BUDGET = 'Budget'
 KEY_HARD_BUDGET = 'Hard Budget'
 KEY_COST = 'Cost'
-KEY_DAYS = 'Duration'
+KEY_DURATION = 'Duration'
 KEY_DEADLINE = 'Deadline'
 # Team metrics
 KEY_TEAM_AVG_RANK = 'Average Team Rank'
@@ -19,7 +22,7 @@ KEY_MET_COMMUNICATION = 'Communication'
 KEY_MET_MORALE = 'Morale'
 KEY_MET_SUPPORT = 'Support'
 KEY_MET_PLANNING = 'Planning'
-KEY_MET_CONFID = 'Confidence'
+KEY_MET_COMMITMENT = 'Team Commitment'
 # Code metrics
 KEY_CODE_BUGS_TOTAL = 'Total Defects'
 KEY_CODE_BUGS_RESOLVED = 'Fixed Defects'
@@ -37,37 +40,38 @@ STATUS_DEVELOPING = 'Development'
 STATUS_COMPLETE = 'Complete'
 STATUS_CANCELLED = 'Cancelled'
 
-OVERRUN_SUPPORT_MULTIPLIER = 0.99
-COST_PER_DEV_RANK_WEEK = 500
+# When a project passes its deadline/budget, management support decreases each week
+OVERRUN_SUPPORT_MULTIPLIER = 0.995
+COST_PER_DEV_RANK_DAY = 100
+MAX_TEAM_SIZE = 6
 
-eval_coefficients = {}
-budget_coefficient = 5
-deadline_coefficient = 5
-bug_coefficient = 3
 
-# def get_headers()
+# Placeholders, will be replaced with actual values when appropriate
+budgetCoefficient = 5
+deadlineCoefficient = 5
+teamCoefficient = 2
+codeCoefficient = 1
+managementCoefficient = 5
+softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
+                            KEY_MET_COMMITMENT: 4.0,
+                            KEY_MET_MORALE: 3.0,
+                            KEY_MET_PLANNING: 4.0,
+                            KEY_MET_SUPPORT: 2.0 }
 
+
+# Given a project state, return the fraction of known bugs which have been resolved
 def calc_proportion_bugs_resolved(state):
-    resolved = state[KEY_CODE_BUGS_TOTAL]
+    resolved = state[KEY_CODE_BUGS_RESOLVED]
     total = state[KEY_CODE_BUGS_TOTAL]
     # Avoid divide by zero
     if total > 0:
-        return resolved / total
+        return float(resolved) / float(total)
     return 0
+
 
 def calc_avg_team_rank(state):
     ranks = state[KEY_TEAM_RANKS]
     return np.mean(ranks) 
-
-def populate_evaluation_coefficients():
-    # TODO - add correct values here
-    # eval_coefficients[KEY_CODE_BUGS_RESOLVED] = 5
-    # eval_coefficients[KEY_CODE_BUGS_TOTAL] = 5
-    eval_coefficients[KEY_MET_COMMUNICATION] = 4.0
-    eval_coefficients[KEY_MET_CONFID] = 3.5
-    eval_coefficients[KEY_MET_MORALE] = 3
-    eval_coefficients[KEY_MET_PLANNING] = 4.5
-    eval_coefficients[KEY_MET_SUPPORT] = 2.1
 
 
 def status_to_string(status):
@@ -81,21 +85,45 @@ def status_to_string(status):
         return "Developing"
 
 
+# Returns a randomly-generated float between 1 and 5, to 2.dp
+def rand_metric_value():
+    return round(SOFT_METRIC_MIN + random.random() * (SOFT_METRIC_MAX - SOFT_METRIC_MIN), 2)
 
-# All Dataframe headers
-metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DAYS, 
+
+# Logistic function to compress values into the range [0,1]
+def sigmoid_func(x):
+    k = 5       # Steepness
+    x_0 = 1     # Centered around 1
+    exp = math.exp(-k*(x-x_0))
+    return 1 / (1+exp)
+
+
+# Divides num by denom, then standardises with a logistic function
+# Avoids dividing by zero
+def calc_ratio_safe(num, denom):
+    if denom > 0:
+        return float(num) / float(denom)
+    return 0
+
+
+# All column headers for the state dataframe
+metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DURATION, 
                   KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
-                  KEY_MET_COMMUNICATION, KEY_MET_CONFID, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
+                  KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                   KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
                   KEY_STATUS,KEY_PROGRESS]
 
+
 # Columns which should be used as input for the prediction model 
-independent_headers = [KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DAYS, 
+independent_headers = [KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DURATION, 
                         KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
-                        KEY_MET_COMMUNICATION, KEY_MET_CONFID, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
+                        KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                         KEY_TEAM_AVG_RANK]
 
-class Project:
+
+
+# Represents a simulated Project
+class SimProject:
     rand = random
 
     def __init__(self, pid, minBudget, maxBudget, unitBudget, minDeadline, maxDeadline):
@@ -107,20 +135,15 @@ class Project:
         # TODO: change this back to between 1-10
         projectScale = random.randint(1,4) / 10.0
 
-        (softBdgt, hardBdgt) = self.generate_budget(minBudget, maxBudget, unitBudget, projectScale)
-        (softDl, hardDl) = self.generate_deadline(minDeadline, maxDeadline, projectScale)
-
-        initCost = int(softBdgt * (0.5 + random.random()))
-        initDuration = int(softDl * (0.5 + random.random()))
+        softBdgt = self.generate_budget(minBudget, maxBudget, unitBudget, projectScale)
+        softDl = self.generate_deadline(minDeadline, maxDeadline, projectScale)
 
         # Create an initial status for the project
         initRow = self.make_state(STATUS_PLANNING)
         initRow[KEY_BUDGET] = softBdgt
         initRow[KEY_DEADLINE] = softDl
         initRow[KEY_COST] = 0
-        initRow[KEY_DAYS] = 0
-
-        MAX_TEAM_SIZE = 6
+        initRow[KEY_DURATION] = 0
 
         # Generate the development ranks for a random team
         # A larger project is permitted to have a larger dev team
@@ -136,23 +159,24 @@ class Project:
         initRow[KEY_TEAM_AVG_RANK] = avgRank
         initRow[KEY_TEAM_RANKS] = teamRanks
 
-         # Initialise soft metrics
-        initRow[KEY_MET_COMMUNICATION] = round(avgRank, 2)
-        initRow[KEY_MET_PLANNING] = round(1 + random.random() * 4, 2)
-        initRow[KEY_MET_CONFID] = round(1 + random.random() * 4, 2)
-        initRow[KEY_MET_SUPPORT] = round(1 + random.random() * 4, 2)
-        initRow[KEY_MET_MORALE] = round(1 + random.random() * 4, 2)
+        # Initialise soft metrics randomly
+        initRow[KEY_MET_COMMUNICATION] = (round(avgRank, 2) + rand_metric_value()) / 2
+        initRow[KEY_MET_PLANNING] = rand_metric_value()
+        initRow[KEY_MET_COMMITMENT] = rand_metric_value()
+        initRow[KEY_MET_SUPPORT] = rand_metric_value()
+        initRow[KEY_MET_MORALE] = rand_metric_value()
 
         self.append_state(initRow)
         
 
+    # Create a new blank project state (Dataframe row) with the given status
     def make_state(self, status):
         state = {
                     KEY_ID:self.projectID,
                     KEY_BUDGET:0, KEY_DEADLINE:0,
-                    KEY_COST:0, KEY_DAYS:0, 
+                    KEY_COST:0, KEY_DURATION:0, 
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0,
-                    KEY_MET_COMMUNICATION:0, KEY_MET_CONFID:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
+                    KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
                     KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0,
                     KEY_PROGRESS: 0,
                     KEY_STATUS: status
@@ -160,49 +184,56 @@ class Project:
 
         return pd.Series(state)
 
+
+    # Deep-copy the given row
     def copy_row(self, row):
         return pd.Series(row, copy=True)
 
 
     # Calculate the probability the next project state will be cancelled
+    # Uses Exponential decay function
     def get_cancellation_chance(self, state):
-        k = 10
+        k = 20
         support_norm = state[KEY_MET_SUPPORT] / SOFT_METRIC_MAX
-        return math.exp(-k * support_norm)
+        return 0.5*math.exp(-k * support_norm)
+
 
     # Calculate the probability the next project state will have negative progress
+    # Uses Exponential decay function
     def get_neg_progress_chance(self, state):
         k = 10
         morale_norm = state[KEY_MET_MORALE] / SOFT_METRIC_MAX
         return 0.2*math.exp(-k * morale_norm)
 
 
-
     def generate_budget(self, min, max, unitBudget, projScale):
         # Ideal cap on spending
         softBudget = self.rand.randint(min, max) * unitBudget
         # Absolute maximum spending permitted
-        hardBudget = softBudget * (1 + math.pow(self.rand.random(), 2))
-        return (softBudget, hardBudget)
+        ##hardBudget = softBudget * (1 + math.pow(self.rand.random(), 2))
+        return softBudget
 
 
     def generate_deadline(self, min, max, projScale):
         # Ideal deadline for project to be delivered by
         softDl = self.rand.randint(min, max)
         # Absolute latest project can be delivered by
-        hardDl = softDl * (1 + math.pow(self.rand.random(), 2))
-        return (softDl, hardDl)
+        ##hardDl = softDl * (1 + math.pow(self.rand.random(), 2))
+        return softDl
 
-        
+    
+    # Retrieve the most recent project state
     def get_last_state(self):
         lst = len(self.statesDf) - 1
         return self.statesDf.iloc[lst]
 
 
+    # Write a new state to the end of the dataframe
     def append_state(self, newState):
         self.statesDf = pd.concat([self.statesDf, newState.to_frame().T], ignore_index=True)
 
 
+    # For the given state, add commits from the dev team and update the number of bugs
     def add_commits_and_bugs(self, newState):
         # Get the number of unresolved bugs in the codebase
         existingBugs = newState[KEY_CODE_BUGS_TOTAL] - newState[KEY_CODE_BUGS_RESOLVED]
@@ -248,23 +279,30 @@ class Project:
 
 
     # Set the new progress of the project, based on the team's soft metrics
-    def update_progress(self, state):
+    # Note: there is a chance for the progress to decrease
+    def update_progress(self, state, duration):
         comm = state[KEY_MET_COMMUNICATION]
         planning = state[KEY_MET_PLANNING]
         morale = state[KEY_MET_MORALE]
+
+        # Apply log to reduce effect of large teams on progress
         teamsize = int(math.log(len(state[KEY_TEAM_RANKS])+1))
 
-        delta = (comm + planning + morale) * teamsize / 500
+        delta = duration * ((comm + planning + morale) * teamsize / 3000) * (0.8 + 0.4 * random.random())
 
+        # If any progress has been made on the project
         if state[KEY_PROGRESS] > 0:
+            # Then, probabilistically reduce the progress
             if random.random() < self.get_neg_progress_chance(state):
                 # Proportion of progress which is reversed (Square-Law to reduce effect)
                 negProgress = pow(random.random(),2)
                 delta = -negProgress * state[KEY_PROGRESS]
         
+        # Update the progress, ensuring new value is no greater than 1
         state[KEY_PROGRESS] = min(1, state[KEY_PROGRESS] + delta)
 
 
+    # Simulate the project's development, generating states until completion
     def simulate(self):
         dl = self.get_last_state()[KEY_DEADLINE]
 
@@ -272,52 +310,57 @@ class Project:
         newStates = []
         prevState = self.get_last_state()
 
-        weeksPlanning = int(prevState[KEY_MET_PLANNING])
-        weekCost = 0
+        # Estimate the number of weeks spent planning
+        weeksPlanning = int(prevState[KEY_MET_PLANNING]) * (0.75 + random.random() / 2)
+        totalPlanningTime = weeksPlanning * 7
+
+        # Days between state updates
+        intervalLen = 1
 
         stopSim = False
 
-        # Simulate a given number of weeks of project development
-        # for week in range(0, weeksToSim):
+        # Simulate project development until completion or cancellation
         while not stopSim:
             newState = self.copy_row(prevState)
+            intervalCost = 0
 
             # If Planning Stage is complete
             if newState[KEY_STATUS] == STATUS_PLANNING:
-                weekCost += random.randint(100,2000)
-                if newState[KEY_DAYS] >= weeksPlanning * 7:
+                intervalCost = random.randint(0,500) * 7
+
+                if newState[KEY_DURATION] >= totalPlanningTime:
                     newState[KEY_STATUS] = STATUS_DEVELOPING
             # If in development and the dev team contains at least one person
             elif newState[KEY_STATUS] == STATUS_DEVELOPING and len(newState[KEY_TEAM_RANKS]) > 0:
                 self.add_commits_and_bugs(newState)
 
-                # Calculate cost of paying development team for the week
+                # Calculate cost of paying development team for the interval
                 for dev in newState[KEY_TEAM_RANKS]:
-                    weekCost += dev * COST_PER_DEV_RANK_WEEK
+                    intervalCost += dev * COST_PER_DEV_RANK_DAY * intervalLen
 
-                self.update_progress(newState)
+                self.update_progress(newState, intervalLen)
 
                 if newState[KEY_PROGRESS] >= 1:
                     newState[KEY_STATUS] = STATUS_COMPLETE
                     stopSim = True
 
             cancellation_chance = self.get_cancellation_chance(newState)
-
             if random.random() < cancellation_chance:
                 newState[KEY_STATUS] = STATUS_CANCELLED
                 stopSim = True
 
-            # Every week the project overruns, the support of executives decreases
-            if newState[KEY_DAYS] > dl or newState[KEY_COST] > newState[KEY_BUDGET]:
+            # Every week the project overruns, the support of the executives decreases
+            if newState[KEY_DURATION] > dl or newState[KEY_COST] > newState[KEY_BUDGET]:
                 newState[KEY_MET_SUPPORT] *= OVERRUN_SUPPORT_MULTIPLIER
 
-            newState[KEY_COST] += weekCost
-            newState[KEY_DAYS] += 7
+            newState[KEY_COST] += intervalCost
+            newState[KEY_DURATION] += intervalLen
             prevState = newState
             newStates.append(newState)
 
         # Add the new states to the existing data
         self.statesDf = pd.concat([self.statesDf, pd.DataFrame(newStates)], ignore_index=True)
+
 
     # Adds a new final project state with the cancelled status
     def cancel(self):
@@ -329,7 +372,8 @@ class Project:
 
         self.append_state(cancelState)
 
-    # Adds a new final project state with the cancelled status
+
+    # Adds a new final project state with the completed status
     def complete(self):
         lastState = self.get_last_state()
         completeState = self.make_state(STATUS_COMPLETE)
@@ -339,78 +383,82 @@ class Project:
 
         self.append_state(completeState)
 
+
+    # Evaluate the success score of the project, by considering its last state
     def evaluate(self):
         lastState = self.get_last_state()
         return self.evaluate_state(lastState)
 
+
+    # Retrieve the status of the last state of the project
     def get_status(self):
         if len(self.statesDf) > 0:
             lastState = self.get_last_state()
             return lastState[KEY_STATUS]
         return None
 
+    # Convert project to string representation for debugging purposes
     def __str__(self):
         s = "Project w/ " + str(len(self.statesDf)) + " states:" + "\n"
         return s + str(self.statesDf)
 
 
-    # Logistic function to compress range of values into [0,2]
-    # x is a float between 0 and 2
-    def sigmoid_func(self, x):
-        k = 5       # Steepness
-        x_0 = 1     # Centered around 1
-        exp = math.exp(-k*(x-x_0))
-        return 1 / (1+exp)
+    ## Project State Component Analysis
+    # Each of these methods returns a float from 0 to 1
+    def eval_budget(self, state):
+        bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST])
+        return sigmoid_func(bdgtRatio)
 
-    def tanh_func(self, x):
-        k = 3       # Gradient steepness
-        x_0 = 3     # Centered around 1
-        c = 1       # Shift up above y-axis
-        m = 0.5     # Overall scaling
-        return m * (math.tanh(k*x - x_0) + c)
+    def eval_deadline(self, state):
+        dlRatio = calc_ratio_safe(state[KEY_DEADLINE], state[KEY_DURATION])
+        return sigmoid_func(dlRatio)
+
+    # def eval_management(self, state):
+    #     return state[KEY_MET_SUPPORT]
+
+    def eval_code(self, state):
+        return calc_proportion_bugs_resolved(state)
+
+    def eval_team(self, state):
+        totalTeamScore = 0
+        maxPossScore = 0
+        for (key, coeff) in softMetricCoefficients.items():
+            totalTeamScore += coeff * state[key]
+            maxPossScore += coeff * SOFT_METRIC_MAX
+        return totalTeamScore / maxPossScore
 
 
-    # Divides num by denom, then standardises with a logistic function
-    # Avoids dividing by zero
-    def calc_ratio_safe(self, num, denom):
-        a = max(1.0, num)
-        b = max(1.0, denom)
-        return self.sigmoid_func(a/b) 
-
-
+    # For the given state, evaluate the overall success of the project in that state, 
+    # returning a score between 0 and 1
     def evaluate_state(self, state):
         score = 0
-        numAttributes = 0
+        # Number of attributes included in the score
+        maxScore = budgetCoefficient + deadlineCoefficient + teamCoefficient + codeCoefficient
 
-        if state[KEY_STATUS] == STATUS_CANCELLED:
-            score = 0
-        else:
-            cost_measure = self.calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST])
-            time_measure = self.calc_ratio_safe(state[KEY_DEADLINE], state[KEY_DAYS])
+        if state[KEY_STATUS] != STATUS_CANCELLED:
+            budgetMeasure = self.eval_budget(state)
+            deadlineMeasure = self.eval_deadline(state)
+            teamMeasure = self.eval_team(state)
+            codeMeasure = self.eval_code(state)
 
-            numAttributes += 2
+            # print("Budget:", budgetMeasure)
+            # print("Deadline:", deadlineMeasure)
+            # print("Team:", teamMeasure)
+            # print("Code:", codeMeasure)
 
-            score += budget_coefficient * cost_measure
-            score += deadline_coefficient * time_measure
-            score += bug_coefficient * calc_proportion_bugs_resolved(state)
+            score += budgetCoefficient * budgetMeasure
+            score += deadlineCoefficient * deadlineMeasure
+            score += teamCoefficient * teamMeasure
+            score += codeCoefficient * codeMeasure
 
-            # print("Avg team rank:", calc_avg_team_rank(state))
+        ratioScore = score / maxScore
+        # print(ratioScore)
+        return ratioScore
 
-            # for (key, coeff) in eval_coefficients.items():
-            #     val = state[key]
-            #     score += coeff * val
-            #     numAttributes += 1
-
-        # print("Score:", score)
-        amortisedScore = 0
-        if numAttributes > 0:
-            amortisedScore = score / numAttributes
-            # print("Amortized Score:", amortisedScore)
-
-        return amortisedScore
 
     def get_dataframe(self):
         return self.statesDf
+
 
     def get_labelled_samples(self, k):
         # We can only take as many samples as there are states
@@ -420,7 +468,7 @@ class Project:
         successScore = self.evaluate()
         success = 0
         
-        if successScore > 4:
+        if successScore > 0.5:
             success = 1
         elif self.get_last_state()[KEY_STATUS] == STATUS_CANCELLED:
             success = -1

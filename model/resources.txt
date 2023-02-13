@@ -21,3 +21,12 @@ https://www.openrefactory.com/intelligent-code-repair-icr/
 "Defect Density: 1/1000 lines of code"
 Not always full picture; requires defects to be known
 https://www.sealights.io/code-quality/defect-density-context-is-king/
+
+# Imputation for filling-in missing values in data-set
+https://scikit-learn.org/stable/modules/impute.html
+
+# Mean-Squared-error for evaluating regression models]
+https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
+
+# Nearest-Neighbours Regression model for continuous output data
+https://scikit-learn.org/stable/modules/neighbors.html
