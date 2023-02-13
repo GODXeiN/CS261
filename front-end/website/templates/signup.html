@@ -4,6 +4,7 @@
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <title>Welcome to the login page</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     </head>
     <body>
         <form method="POST">
@@ -15,6 +16,7 @@
                     class="form-control" 
                     id="name" name="name" 
                     placeholder="Enter Name"
+                    required
                 />
             </div>
             <div class="form-group">
@@ -24,6 +26,7 @@
                     class="form-control" 
                     id="email" name="email" 
                     placeholder="Enter Email"
+                    required
                 />
             </div>
             <div class="form-group">
@@ -33,8 +36,9 @@
                     class="form-control" 
                     id="pw1" name="pw1" 
                     placeholder="Enter Password"
-                    required pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                    required pattern="?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,}"
                     title="Password must contain at least 8 characters, one uppercase character, at least one number and a special character"
+                
                 />
             </div>
             <div class="form-group">
@@ -46,12 +50,42 @@
                     placeholder="Confirm Password"
                 />
             </div>
+            <input type="checkbox" onclick="show()">Show Password
             <br>
-            <button tpye="submit">Submit</button>
+            <button type="submit">Submit</button>
         </form>
 
-        {% for message in get_flashed_messages() %}
-        <div class="flash">{{message}}</div>
-        {% endfor %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+              <div class="alert alert-{{category}}" id="flash">
+                    {{message}}
+                    <input type="button" value=&#10006 onlick="remFlash()">
+                          
+              </input>
+              </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+        <script>
+            function show(){
+                var x = document.getElementById("pw1");
+                var y = document.getElementById("pw2");
+                if(x.type==="password" && y.type==="password"){
+                    x.type="text";
+                    y.type="text";
+                }
+                else{
+                    x.type="password";
+                    y.type="password";
+                }
+            }
+
+            function remFlash(){
+                const element=document.getElementById('flash');
+                element.remove();
+            }
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     </body>
 </html>
