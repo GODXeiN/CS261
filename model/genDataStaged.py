@@ -1,26 +1,48 @@
 import random
 from projectDf import SimProject
+from os.path import isdir
+from os import makedirs
 
 # Generates a CSV file containing artificial project data.
 # Simulates fixed number of projects then takes given number of samples from each
 # and writes them to the given output file.
 
+MODE_GEN_TRAIN = 0
+MODE_GEN_TEST = 1
 
-file = open("testDataStaged.csv", 'w')
+# If the data directory is not present, make it
+if not isdir("./data"):
+    makedirs("./data")
 
-# Projects to be generated
-NUM_PROJECTS = 500
-# Number of sample states to record for each project
-NUM_SAMPLES = 5
+# Describes whether data should be generated for training or for testing the model
+mode = MODE_GEN_TEST
+
+FILE_TRAIN = "./data/trainDataStaged.csv" 
+FILE_TEST = "./data/testDataStaged.csv"
+
+# Number of simulated projects to be generated
+NUM_PROJECTS = 1000
+# Number of samples saved from each generated project
+NUM_SAMPLES = 1
+
+if mode == MODE_GEN_TRAIN:
+    destFilename = FILE_TRAIN
+    print("Generating Training Data...")
+    NUM_SAMPLES = 3
+else:
+    destFilename = FILE_TEST
+    print("Generating Testing Data...")
+
+destFile = open(destFilename, 'w')
 
 # Range for the initial budget of the generated projects
 budgetMin = 1     # 100,000
-budgetMax = 100   # 10 million
-budgetUnit = 10000 
+budgetMax = 10000   # 5 million
+budgetUnit = 1000 
 
 # Range for the initial deadline of the generated projects
-deadlineMin = 100
-deadlineMax = 1000
+deadlineMin = 50
+deadlineMax = 2000
 
 # Stats about the generated project data
 totalSamples = 0
@@ -34,6 +56,7 @@ for i in range(0, NUM_PROJECTS):
     # Simulate the project's development till either complete or cancelled
     p.simulate()
     # print(str(p))
+    # print("-----")
     
     sampleDf = p.get_labelled_samples(NUM_SAMPLES)
     totalSamples += len(sampleDf)
@@ -48,9 +71,9 @@ for i in range(0, NUM_PROJECTS):
         numCancellations += 1
 
     # Write the given samples to the file
-    file.write(sampleDf.to_csv(header=(i==0), lineterminator='\n'))
+    destFile.write(sampleDf.to_csv(header=(i==0), lineterminator='\n'))
 
-file.close()
+destFile.close()
 
 # Display a summary after generation
 print("\nGenerated", NUM_PROJECTS, "projects, producing", totalSamples, "samples")

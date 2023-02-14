@@ -12,9 +12,13 @@ from projectDf import independent_headers
 
 # The file to which the trained model will be saved
 MODEL_SAVE_DEST = 'logregmodelpipeline.joblib'
+MODEL_ACCURACY_DEST = 'logregmodelaccuracy.txt'
+
+csvdata = "./data/trainDataStaged.csv"
 
 # Open the project training/test data
-df = pd.read_csv("testDataStaged.csv")
+df = pd.read_csv(csvdata)
+print("Loaded Training File:", csvdata)
 
 # Dependent field; the field we want to model to predict
 target_attr = 'Success'
@@ -29,13 +33,16 @@ pipeLR = Pipeline([('scaler', StandardScaler()), ('logreg', LogisticRegression()
 # Split the imported data into training and test components
 # Stratify ensures that the proportion of each class is maintained
 # e.g. if the data contains 25% success, then training contains 25% success and test data contains 25% success
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=1, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=1, stratify=y)
+print("Split dataset into stratified training and test samples")
 
 # TRAINING using training dataset
 pipeLR.fit(X_train, y_train)
+print("Trained model")
 
 # PREDICTION using test dataset
 y_pred = pipeLR.predict(X_test)
+print("Obtained model predictions for test-set")
 
 # Evaluate the model's accuracy by comparing the prediction to the actual test y-values
 print(classification_report(y_test, y_pred))

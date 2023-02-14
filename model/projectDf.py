@@ -10,7 +10,7 @@ KEY_ID = 'pID'
 # Hard metrics
 KEY_BUDGET = 'Budget'
 KEY_HARD_BUDGET = 'Hard Budget'
-KEY_COST = 'Cost'
+KEY_COST_TO_DATE = 'Cost'
 KEY_DURATION = 'Duration'
 KEY_DEADLINE = 'Deadline'
 # Team metrics
@@ -41,16 +41,16 @@ STATUS_COMPLETE = 'Complete'
 STATUS_CANCELLED = 'Cancelled'
 
 # When a project passes its deadline/budget, management support decreases each week
-OVERRUN_SUPPORT_MULTIPLIER = 0.995
-COST_PER_DEV_RANK_DAY = 100
+OVERRUN_SUPPORT_MULTIPLIER = 0.999
+COST_PER_DEV_RANK_DAY = 150
 MAX_TEAM_SIZE = 6
 
 
 # Placeholders, will be replaced with actual values when appropriate
-budgetCoefficient = 5
-deadlineCoefficient = 5
+budgetCoefficient = 3
+deadlineCoefficient = 3
 teamCoefficient = 2
-codeCoefficient = 1
+codeCoefficient = 0.5
 managementCoefficient = 5
 softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
                             KEY_MET_COMMITMENT: 4.0,
@@ -98,6 +98,12 @@ def sigmoid_func(x):
     return 1 / (1+exp)
 
 
+# Convenience method for generating exponentially-distributed values for a given set of parameters/coefficients
+def exponential(x, k, x_0, c):
+    return math.exp(k*(x-x_0)) + c
+
+
+
 # Divides num by denom, then standardises with a logistic function
 # Avoids dividing by zero
 def calc_ratio_safe(num, denom):
@@ -107,7 +113,7 @@ def calc_ratio_safe(num, denom):
 
 
 # All column headers for the state dataframe
-metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DURATION, 
+metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
                   KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
                   KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                   KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
@@ -115,7 +121,7 @@ metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DURATION,
 
 
 # Columns which should be used as input for the prediction model 
-independent_headers = [KEY_BUDGET, KEY_DEADLINE, KEY_COST, KEY_DURATION, 
+independent_headers = [KEY_BUDGET, KEY_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
                         KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
                         KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                         KEY_TEAM_AVG_RANK]
@@ -142,7 +148,7 @@ class SimProject:
         initRow = self.make_state(STATUS_PLANNING)
         initRow[KEY_BUDGET] = softBdgt
         initRow[KEY_DEADLINE] = softDl
-        initRow[KEY_COST] = 0
+        initRow[KEY_COST_TO_DATE] = 0
         initRow[KEY_DURATION] = 0
 
         # Generate the development ranks for a random team
@@ -174,7 +180,7 @@ class SimProject:
         state = {
                     KEY_ID:self.projectID,
                     KEY_BUDGET:0, KEY_DEADLINE:0,
-                    KEY_COST:0, KEY_DURATION:0, 
+                    KEY_COST_TO_DATE:0, KEY_DURATION:0, 
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0,
                     KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
                     KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0,
@@ -193,17 +199,19 @@ class SimProject:
     # Calculate the probability the next project state will be cancelled
     # Uses Exponential decay function
     def get_cancellation_chance(self, state):
-        k = 20
-        support_norm = state[KEY_MET_SUPPORT] / SOFT_METRIC_MAX
-        return 0.5*math.exp(-k * support_norm)
+        k = -20
+        # Get support metric in range [0,1]
+        support = state[KEY_MET_SUPPORT] / SOFT_METRIC_MAX
+        return 0.5 * exponential(support, k, 0, 0)
 
 
     # Calculate the probability the next project state will have negative progress
     # Uses Exponential decay function
     def get_neg_progress_chance(self, state):
-        k = 10
-        morale_norm = state[KEY_MET_MORALE] / SOFT_METRIC_MAX
-        return 0.2*math.exp(-k * morale_norm)
+        k = -10
+        # Get morale metric in range [0,1]
+        morale = state[KEY_MET_MORALE] / SOFT_METRIC_MAX
+        return 0.2 * exponential(morale, k, 0, 0)
 
 
     def generate_budget(self, min, max, unitBudget, projScale):
@@ -234,31 +242,33 @@ class SimProject:
 
 
     # For the given state, add commits from the dev team and update the number of bugs
-    def add_commits_and_bugs(self, newState):
+    def add_commits_and_bugs(self, state):
         # Get the number of unresolved bugs in the codebase
-        existingBugs = newState[KEY_CODE_BUGS_TOTAL] - newState[KEY_CODE_BUGS_RESOLVED]
+        existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
-        devTeam = newState[KEY_TEAM_RANKS]
+        devTeam = state[KEY_TEAM_RANKS]
         devTeamSize = len(devTeam)
 
         # Number of commits is proportional to the morale and dev team size
-        newCommits = random.randint(1, int(newState[KEY_MET_MORALE]) * devTeamSize)
+        newCommits = random.randint(1, int(state[KEY_MET_MORALE]) * devTeamSize)
         newBugs = 0
         newResolvedBugs = 0
 
-        existingBugs = newState[KEY_CODE_BUGS_TOTAL] - newState[KEY_CODE_BUGS_RESOLVED]
+        existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
         for rank in devTeam:
             # Calculate the chance of a developer not fixing a bug, based on their experience
             # e.g.
             #   Rank=0 means 75% chance of creating a bug; 
             #   Rank=5 means 30% chance of creating a bug
-            bugLikelihood = 0.75 * math.exp(rank / 5)
 
-            # TODO: include some coefficients so these can be varied based on team size and metrics
+            # Get estimate of team dedication (0-1)
+            dedication = (rank + state[KEY_MET_COMMITMENT]) / 2 * SOFT_METRIC_MAX
+            bugLikelihood = 0.75 * exponential(dedication, 1, 0, 0)
+
             # Include some random number of bugs
             commitBugs = 0
-            for i in range(0, random.randint(0,20)):
+            for i in range(0, random.randint(0,20 - rank * 2)):
                 if random.random() < bugLikelihood:
                     commitBugs = random.randint(0,3)
                     
@@ -273,9 +283,9 @@ class SimProject:
 
             newResolvedBugs += commitResolvedBugs
 
-        newState[KEY_CODE_COMMITS] += newCommits
-        newState[KEY_CODE_BUGS_TOTAL] += newBugs
-        newState[KEY_CODE_BUGS_RESOLVED] += newResolvedBugs
+        state[KEY_CODE_COMMITS] += newCommits
+        state[KEY_CODE_BUGS_TOTAL] += newBugs
+        state[KEY_CODE_BUGS_RESOLVED] += newResolvedBugs
 
 
     # Set the new progress of the project, based on the team's soft metrics
@@ -292,7 +302,7 @@ class SimProject:
 
         # If any progress has been made on the project
         if state[KEY_PROGRESS] > 0:
-            # Then, probabilistically reduce the progress
+            # Then, there is a chance that the team will lose progress (maybe due to a problem)
             if random.random() < self.get_neg_progress_chance(state):
                 # Proportion of progress which is reversed (Square-Law to reduce effect)
                 negProgress = pow(random.random(),2)
@@ -300,6 +310,37 @@ class SimProject:
         
         # Update the progress, ensuring new value is no greater than 1
         state[KEY_PROGRESS] = min(1, state[KEY_PROGRESS] + delta)
+
+
+    # Calculates the cost of paying development team for the given interval and adds that
+    # amount to the cumulative cost of the project
+    def include_team_costs(self, state, intervalLen):
+        for dev in state[KEY_TEAM_RANKS]:
+            state[KEY_COST_TO_DATE] += dev * COST_PER_DEV_RANK_DAY * intervalLen
+
+
+    def include_unforeseen_costs(self, state, intervalLen):
+        # In software development, projects usually encounter costs which were not
+        # expected, for example with infrastructure upgrades or new technologies.
+        # This function simulates the chance for the project to encounter one of these costs
+
+        planning = state[KEY_MET_PLANNING]/SOFT_METRIC_MAX
+        # A well-planned project is less likely to encounter additional costs (but still can do so)
+
+        # Calculate the probability of incurring costs (between 0.05 and 0.5)
+        probIncurCosts = 0.5 * exponential(planning, -2, 0, 0.1)
+
+        maxCost = 10000     # Maximum possible cost
+        baseCost = 0.01     # Minimum possible cost, as a proportion of the maximum cost
+        costK = 3           # Steepness of exponential cost function 
+
+        # Every day, the project has a 1% chance to encounter additional costs
+        for i in range(0, intervalLen):
+            if random.random() < probIncurCosts:
+                x = random.random()
+                # Calculate the cost, rounding to ensure integer value
+                unforeseenCost = int(maxCost * (exponential(x-1, costK, 0, baseCost)))
+                state[KEY_COST_TO_DATE] += unforeseenCost
 
 
     # Simulate the project's development, generating states until completion
@@ -315,31 +356,30 @@ class SimProject:
         totalPlanningTime = weeksPlanning * 7
 
         # Days between state updates
-        intervalLen = 1
+        intervalLen = 7
 
         stopSim = False
 
         # Simulate project development until completion or cancellation
         while not stopSim:
             newState = self.copy_row(prevState)
-            intervalCost = 0
 
-            # If Planning Stage is complete
+            # If project is being planned
             if newState[KEY_STATUS] == STATUS_PLANNING:
-                intervalCost = random.randint(0,500) * 7
+                newState[KEY_COST_TO_DATE] = random.randint(0,500) * intervalLen
 
+                # If planning is complete, move to development
                 if newState[KEY_DURATION] >= totalPlanningTime:
                     newState[KEY_STATUS] = STATUS_DEVELOPING
-            # If in development and the dev team contains at least one person
+
+            # Otherwise, if in development and the dev team contains at least one person
             elif newState[KEY_STATUS] == STATUS_DEVELOPING and len(newState[KEY_TEAM_RANKS]) > 0:
                 self.add_commits_and_bugs(newState)
-
-                # Calculate cost of paying development team for the interval
-                for dev in newState[KEY_TEAM_RANKS]:
-                    intervalCost += dev * COST_PER_DEV_RANK_DAY * intervalLen
-
+                self.include_team_costs(newState, intervalLen)
+                self.include_unforeseen_costs(newState, intervalLen)
                 self.update_progress(newState, intervalLen)
 
+                # If the project is fully complete, stop the simulation
                 if newState[KEY_PROGRESS] >= 1:
                     newState[KEY_STATUS] = STATUS_COMPLETE
                     stopSim = True
@@ -350,10 +390,9 @@ class SimProject:
                 stopSim = True
 
             # Every week the project overruns, the support of the executives decreases
-            if newState[KEY_DURATION] > dl or newState[KEY_COST] > newState[KEY_BUDGET]:
+            if newState[KEY_DURATION] > dl or newState[KEY_COST_TO_DATE] > newState[KEY_BUDGET]:
                 newState[KEY_MET_SUPPORT] *= OVERRUN_SUPPORT_MULTIPLIER
 
-            newState[KEY_COST] += intervalCost
             newState[KEY_DURATION] += intervalLen
             prevState = newState
             newStates.append(newState)
@@ -406,7 +445,7 @@ class SimProject:
     ## Project State Component Analysis
     # Each of these methods returns a float from 0 to 1
     def eval_budget(self, state):
-        bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST])
+        bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST_TO_DATE])
         return sigmoid_func(bdgtRatio)
 
     def eval_deadline(self, state):
@@ -468,10 +507,10 @@ class SimProject:
         successScore = self.evaluate()
         success = 0
         
-        if successScore > 0.5:
+        if successScore > 0.6:
             success = 1
-        elif self.get_last_state()[KEY_STATUS] == STATUS_CANCELLED:
-            success = -1
+        # elif self.get_last_state()[KEY_STATUS] == STATUS_CANCELLED:
+        #     success = -1
         
         sampleDf.insert(len(sampleDf.columns),'Success',success)
         # Remove the team ranks
