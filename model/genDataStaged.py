@@ -35,16 +35,16 @@ else:
 
 destFile = open(destFilename, 'w')
 
-# Range for the initial budget of the generated projects
-budgetMin = 1     # 100,000
-budgetMax = 10000   # 5 million
+# Range for the initial budget of the generated projects (1 million-10 million)
+budgetMin = 1
+budgetMax = 10000
 budgetUnit = 1000 
 
-# Range for the initial deadline of the generated projects
+# Range for the initial deadline of the generated projects (in days)
 deadlineMin = 50
 deadlineMax = 2000
 
-# Stats about the generated project data
+# Record stats about the generated project data
 totalSamples = 0
 numSuccesses = 0
 numFailures = 0
