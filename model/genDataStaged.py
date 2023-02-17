@@ -2,6 +2,8 @@ import random
 from projectDf import SimProject
 from os.path import isdir
 from os import makedirs
+import numpy as np
+import RiskAssessment
 
 # Generates a CSV file containing artificial project data.
 # Simulates fixed number of projects then takes given number of samples from each
@@ -21,7 +23,7 @@ FILE_TRAIN = "./data/trainDataStaged.csv"
 FILE_TEST = "./data/testDataStaged.csv"
 
 # Number of simulated projects to be generated
-NUM_PROJECTS = 1000
+NUM_PROJECTS = 2
 # Number of samples saved from each generated project
 NUM_SAMPLES = 1
 
@@ -35,20 +37,29 @@ else:
 
 destFile = open(destFilename, 'w')
 
-# Range for the initial budget of the generated projects (1 million-10 million)
-budgetMin = 1
-budgetMax = 10000
+# Range for the initial budget of the generated projects
+budgetMin = 1     # 100,000
+budgetMax = 10000   # 5 million
 budgetUnit = 1000 
 
-# Range for the initial deadline of the generated projects (in days)
+# Range for the initial deadline of the generated projects
 deadlineMin = 50
 deadlineMax = 2000
 
-# Record stats about the generated project data
+# Stats about the generated project data
 totalSamples = 0
 numSuccesses = 0
 numFailures = 0
 numCancellations = 0
+
+
+
+from regLabeller import SCORER_SAVE_DEST, features
+from pickle import load
+
+# Load the trained regression model for predicting project success
+scorer = load(open(SCORER_SAVE_DEST,"rb"))
+
 
 
 for i in range(0, NUM_PROJECTS):
@@ -60,6 +71,12 @@ for i in range(0, NUM_PROJECTS):
     
     sampleDf = p.get_labelled_samples(NUM_SAMPLES)
     totalSamples += len(sampleDf)
+
+    # sampleDfSelectedHeaders = np.array(sampleDf[features])
+    # print(str(sampleDfSelectedHeaders))
+
+    # scoredSuccess = scorer.predict(sampleDfSelectedHeaders)
+    # print(scoredSuccess)
 
     # Get the result of the project, so we can count the output ratios
     success = sampleDf.iloc[0]['Success']

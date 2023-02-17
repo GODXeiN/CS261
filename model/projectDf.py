@@ -3,6 +3,8 @@ import math
 import pandas as pd
 import numpy as np
 
+from RiskAssessment import RiskAssessment
+
 # TODO: make list of usages for each metric
 
 
@@ -12,16 +14,16 @@ KEY_BUDGET = 'Budget'
 KEY_HARD_BUDGET = 'Hard Budget'
 KEY_COST_TO_DATE = 'Cost'
 KEY_DURATION = 'Duration'
-KEY_DEADLINE = 'Deadline'
+KEY_DEADLINE = 'Schedule'
 # Team metrics
-KEY_TEAM_AVG_RANK = 'Average Team Rank'
+KEY_TEAM_AVG_RANK = 'Average Team Experience'
 KEY_TEAM_SIZE = 'Team Size'
 KEY_TEAM_RANKS = 'Team Ranks'
 # Soft metrics
-KEY_MET_COMMUNICATION = 'Communication'
-KEY_MET_MORALE = 'Morale'
-KEY_MET_SUPPORT = 'Support'
-KEY_MET_PLANNING = 'Planning'
+KEY_MET_COMMUNICATION = 'Team Communication'
+KEY_MET_MORALE = 'Team Morale'
+KEY_MET_SUPPORT = 'Top-Level Management Support'
+KEY_MET_PLANNING = 'Project Planning'
 KEY_MET_COMMITMENT = 'Team Commitment'
 # Code metrics
 KEY_CODE_BUGS_TOTAL = 'Total Defects'
@@ -47,11 +49,6 @@ MAX_TEAM_SIZE = 6
 
 
 # Placeholders, will be replaced with actual values when appropriate
-budgetCoefficient = 3
-deadlineCoefficient = 3
-teamCoefficient = 2
-codeCoefficient = 0.5
-managementCoefficient = 5
 softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
                             KEY_MET_COMMITMENT: 4.0,
                             KEY_MET_MORALE: 3.0,
@@ -242,21 +239,22 @@ class SimProject:
 
 
     # For the given state, add commits from the dev team and update the number of bugs
-    def add_commits_and_bugs(self, state):
+    def add_commits_and_bugs(self, state, intervalLen):
         # Get the number of unresolved bugs in the codebase
         existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
         devTeam = state[KEY_TEAM_RANKS]
-        devTeamSize = len(devTeam)
 
         # Number of commits is proportional to the morale and dev team size
-        newCommits = random.randint(1, int(state[KEY_MET_MORALE]) * devTeamSize)
+        newCommits = 0
         newBugs = 0
         newResolvedBugs = 0
 
         existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
         for rank in devTeam:
+            newDevCommits = random.randint(0, int(state[KEY_MET_MORALE]) * intervalLen)
+            newCommits += newDevCommits
             # Calculate the chance of a developer not fixing a bug, based on their experience
             # e.g.
             #   Rank=0 means 75% chance of creating a bug; 
@@ -268,6 +266,7 @@ class SimProject:
 
             # Include some random number of bugs
             commitBugs = 0
+            # TODO: make a probabilistic exponential decay function, in terms of rank
             for i in range(0, random.randint(0,20 - rank * 2)):
                 if random.random() < bugLikelihood:
                     commitBugs = random.randint(0,3)
@@ -298,7 +297,9 @@ class SimProject:
         # Apply log to reduce effect of large teams on progress
         teamsize = int(math.log(len(state[KEY_TEAM_RANKS])+1))
 
-        delta = duration * ((comm + planning + morale) * teamsize / 3000) * (0.8 + 0.4 * random.random())
+        avgMetric = (comm + planning + morale) / 15
+
+        delta = duration * (avgMetric * teamsize / 200) * (0.8 + 0.4 * random.random())
 
         # If any progress has been made on the project
         if state[KEY_PROGRESS] > 0:
@@ -356,7 +357,7 @@ class SimProject:
         totalPlanningTime = weeksPlanning * 7
 
         # Days between state updates
-        intervalLen = 7
+        intervalLen = 1
 
         stopSim = False
 
@@ -374,7 +375,7 @@ class SimProject:
 
             # Otherwise, if in development and the dev team contains at least one person
             elif newState[KEY_STATUS] == STATUS_DEVELOPING and len(newState[KEY_TEAM_RANKS]) > 0:
-                self.add_commits_and_bugs(newState)
+                self.add_commits_and_bugs(newState, intervalLen)
                 self.include_team_costs(newState, intervalLen)
                 self.include_unforeseen_costs(newState, intervalLen)
                 self.update_progress(newState, intervalLen)
@@ -444,59 +445,105 @@ class SimProject:
 
     ## Project State Component Analysis
     # Each of these methods returns a float from 0 to 1
-    def eval_budget(self, state):
+    def eval_finance(self, state):
         bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST_TO_DATE])
         return sigmoid_func(bdgtRatio)
 
-    def eval_deadline(self, state):
+    def eval_time(self, state):
         dlRatio = calc_ratio_safe(state[KEY_DEADLINE], state[KEY_DURATION])
         return sigmoid_func(dlRatio)
 
-    # def eval_management(self, state):
-    #     return state[KEY_MET_SUPPORT]
+    def eval_management(self, state):
+        return (state[KEY_MET_SUPPORT] + state[KEY_MET_PLANNING]) / (2 * SOFT_METRIC_MAX)
 
     def eval_code(self, state):
-        return calc_proportion_bugs_resolved(state)
+        # Get an estimate for project activity by considering commit frequency 
+        # before and after the last 30 days
+        activityRatio = sigmoid_func(self.get_activity_ratio(30))
+        # print("Activity Ratio:", str(activityRatio))
+        # Consider the proportion of *known* bugs which have been resolved
+        resolvedBugRatio = calc_proportion_bugs_resolved(state)
+        return (activityRatio + resolvedBugRatio) / 2
 
     def eval_team(self, state):
         totalTeamScore = 0
         maxPossScore = 0
+        # Consider the weighted sum of all soft team metrics
         for (key, coeff) in softMetricCoefficients.items():
-            totalTeamScore += coeff * state[key]
-            maxPossScore += coeff * SOFT_METRIC_MAX
+            totalTeamScore += coeff * (state[key] / SOFT_METRIC_MAX)
+            maxPossScore += coeff
         return totalTeamScore / maxPossScore
 
 
     # For the given state, evaluate the overall success of the project in that state, 
     # returning a score between 0 and 1
     def evaluate_state(self, state):
-        score = 0
-        # Number of attributes included in the score
-        maxScore = budgetCoefficient + deadlineCoefficient + teamCoefficient + codeCoefficient
-
         if state[KEY_STATUS] != STATUS_CANCELLED:
-            budgetMeasure = self.eval_budget(state)
-            deadlineMeasure = self.eval_deadline(state)
+            budgetMeasure = self.eval_finance(state)
+            deadlineMeasure = self.eval_time(state)
             teamMeasure = self.eval_team(state)
             codeMeasure = self.eval_code(state)
+            managementMeasure = self.eval_management(state)
 
-            # print("Budget:", budgetMeasure)
-            # print("Deadline:", deadlineMeasure)
-            # print("Team:", teamMeasure)
-            # print("Code:", codeMeasure)
+            riskAssessment = RiskAssessment(budgetMeasure, deadlineMeasure, teamMeasure, codeMeasure, managementMeasure)
+        else:
+            riskAssessment = RiskAssessment(0,0,0,0,0)
 
-            score += budgetCoefficient * budgetMeasure
-            score += deadlineCoefficient * deadlineMeasure
-            score += teamCoefficient * teamMeasure
-            score += codeCoefficient * codeMeasure
-
-        ratioScore = score / maxScore
-        # print(ratioScore)
-        return ratioScore
+        return riskAssessment
 
 
     def get_dataframe(self):
         return self.statesDf
+
+
+    # Calculate the number of commits per day, for the last D days
+    def get_commit_frequency(self, D):
+        lastState = self.get_last_state()
+        today = lastState[KEY_DURATION]
+
+        # Calculate commit frequency for the entire project
+        if D == 0:
+            return calc_ratio_safe(lastState[KEY_CODE_COMMITS], lastState[KEY_DURATION])
+        # Only consider commits over the last D days 
+        else:
+            commitsInInterval = lastState[KEY_CODE_COMMITS]
+            # Find the first state outside the chosen interval
+            for i in range(len(self.statesDf)-1, 0):
+                state = self.statesDf.iloc[i]
+                # If more than D days between this state and the most-recent state
+                if state[KEY_DURATION] + D < today:
+                    commitsInInterval -= state[KEY_CODE_COMMITS]
+                    break
+
+            return calc_ratio_safe(commitsInInterval, D)
+
+
+    # Calculate the commit frequency for the interval ending D days ago, then for the interval starting D days ago 
+    # and ending at the most-recent state. Return the ratio of the second frequency over the first frequency.
+    def get_activity_ratio(self, D):
+        lastState = self.get_last_state()
+        today = lastState[KEY_DURATION]
+
+        commitsBefore = 0
+        daysBefore = 0
+
+        for i in range(0, len(self.statesDf)):
+            state = self.statesDf.iloc[i]
+            # If more than D days between this state and the most-recent state
+            if state[KEY_DURATION] + D >= today:
+                break
+            else:
+                commitsBefore = state[KEY_CODE_COMMITS]
+                daysBefore = state[KEY_DURATION]
+        
+        commitsAfter = lastState[KEY_CODE_COMMITS] - commitsBefore
+        daysAfter = lastState[KEY_DURATION] - daysBefore
+
+        commFreqBefore = calc_ratio_safe(commitsBefore, daysBefore)
+        commFreqAfter = calc_ratio_safe(commitsAfter, daysAfter)
+
+        return calc_ratio_safe(commFreqAfter, commFreqBefore)
+ 
 
 
     def get_labelled_samples(self, k):
@@ -504,15 +551,21 @@ class SimProject:
         k = min(k, len(self.statesDf))
         sampleDf = self.statesDf.sample(k)
 
-        successScore = self.evaluate()
-        success = 0
+        # Evaluate whether the project was a success, producing a score in range [0,1]
+        riskAssess = self.evaluate()
+
+        # print(str(riskAssess))
+
+        successScore = riskAssess.get_normalised_score()
+        
+        isSuccess = 0
         
         if successScore > 0.6:
-            success = 1
+            isSuccess = 1
         # elif self.get_last_state()[KEY_STATUS] == STATUS_CANCELLED:
         #     success = -1
         
-        sampleDf.insert(len(sampleDf.columns),'Success',success)
+        sampleDf.insert(len(sampleDf.columns), 'Success', isSuccess)
         # Remove the team ranks
         return sampleDf.drop(columns=[KEY_TEAM_RANKS],axis=1)
 

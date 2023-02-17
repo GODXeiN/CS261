@@ -1,50 +1,48 @@
-# Classification vs Regression (with examples)
-https://www.springboard.com/blog/data-science/regression-vs-classification/
+# ML MODELS
+    # Classification vs Regression (with examples)
+    https://www.springboard.com/blog/data-science/regression-vs-classification/
+
+    # Explanation of Logistic Regression + basic tutorial
+    https://www.datacamp.com/tutorial/understanding-logistic-regression-python
+
+    # Tutorial for Sklearn for classification models (basis for most of the code)
+    https://towardsdatascience.com/building-classification-models-with-sklearn-6a8fd107f0c1
+
+    # Numpy + Sklearn
+    https://medium.com/personal-project/numpy-pandas-and-scikit-learn-explained-e7336baecedc
+
+    # Imputation for filling-in missing values in data-set
+    https://scikit-learn.org/stable/modules/impute.html
+
+    # Mean-Squared-error for evaluating regression models
+    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
+
+    # Nearest-Neighbours Regression model for continuous output data
+    https://scikit-learn.org/stable/modules/neighbors.html
 
 
-# Explanation of Logistic Regression + basic tutorial
-https://www.datacamp.com/tutorial/understanding-logistic-regression-python
+# DATA GENERATION
 
+    # Code Bug Research for Simulation
+    "On average, a developer creates 70 bugs per 1000 lines of code (!)
+    15 bugs per 1,000 lines of code find their way to the customers
+    Fixing a bug takes 30 times longer than writing a line of code
+    75% of a developer’s time is spent on debugging (1500 hours a year!)"
+    https://www.openrefactory.com/intelligent-code-repair-icr/
 
-# Tutorial for Sklearn for classification models (basis for most of the code)
-https://towardsdatascience.com/building-classification-models-with-sklearn-6a8fd107f0c1
+    # Software Engineer hourly rates
+    #   Rank 1 = Beginner = £15-20/hr * 30-40hrs/week = £450-600/week = ~£75/day
+    #   Rank 5 = Advanced = £40-60/hr * 30-40hrs/week = £1200-2400/week = ~£300/day
+    https://www.approvedindex.co.uk/software-developers/software-development-prices
 
+    # Commit Frequency (by author) for successful/unsuccessful projects
+        # Consider median commit time for 6 months vs. all-time
+        # "Unpopular projects have a much higher chance of high commit frequencies for a single committer"
+        # Popular projects have median commit time ~2-2.5hrs, versus unpopular 1-1.5hrs
+        # Measure project activity by considering ratio  (current median commit time) / (all-time median commit time)
+        # For inactive projects, this ratio decreases over time
+    https://www.academia.edu/36780849/The_empirical_commit_frequency_distribution_of_open_source_projects
 
-# Numpy + Sklearn
-https://medium.com/personal-project/numpy-pandas-and-scikit-learn-explained-e7336baecedc
-
-
-# Code Bug Research for Simulation
-"On average, a developer creates 70 bugs per 1000 lines of code (!)
- 15 bugs per 1,000 lines of code find their way to the customers
- Fixing a bug takes 30 times longer than writing a line of code
- 75% of a developer’s time is spent on debugging (1500 hours a year!)"
-https://www.openrefactory.com/intelligent-code-repair-icr/
-
-
-
-# Software Engineer hourly rates
-#   Rank 1 = Beginner = £15-20/hr * 30-40hrs/week = £450-600/week = ~£75/day
-#   Rank 5 = Advanced = £40-60/hr * 30-40hrs/week = £1200-2400/week = ~£300/day
-https://www.approvedindex.co.uk/software-developers/software-development-prices
-
-
-
-"Defect Density: 1/1000 lines of code"
-Not always full picture; requires defects to be known
-https://www.sealights.io/code-quality/defect-density-context-is-king/
-
-
-
-# Imputation for filling-in missing values in data-set
-https://scikit-learn.org/stable/modules/impute.html
-
-
-
-# Mean-Squared-error for evaluating regression models
-https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
-
-
-
-# Nearest-Neighbours Regression model for continuous output data
-https://scikit-learn.org/stable/modules/neighbors.html
+    "Defect Density: 1/1000 lines of code"
+    Not always full picture; requires defects to be known
+    https://www.sealights.io/code-quality/defect-density-context-is-king/
