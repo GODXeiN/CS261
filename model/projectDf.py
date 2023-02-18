@@ -3,9 +3,7 @@ import math
 import pandas as pd
 import numpy as np
 
-from RiskAssessment import RiskAssessment
-
-# TODO: make list of usages for each metric
+import SuccessReport
 
 
 KEY_ID = 'pID'
@@ -475,9 +473,10 @@ class SimProject:
         return totalTeamScore / maxPossScore
 
 
-    # For the given state, evaluate the overall success of the project in that state, 
-    # returning a score between 0 and 1
+    # For the given state, evaluate the success of each of the major components and then the overall project
     def evaluate_state(self, state):
+        succReport = SuccessReport.SuccessReport()
+
         if state[KEY_STATUS] != STATUS_CANCELLED:
             budgetMeasure = self.eval_finance(state)
             deadlineMeasure = self.eval_time(state)
@@ -485,18 +484,16 @@ class SimProject:
             codeMeasure = self.eval_code(state)
             managementMeasure = self.eval_management(state)
 
-            riskAssessment = RiskAssessment(budgetMeasure, deadlineMeasure, teamMeasure, codeMeasure, managementMeasure)
-        else:
-            riskAssessment = RiskAssessment(0,0,0,0,0)
+            succReport.set_success_values(budgetMeasure, deadlineMeasure, teamMeasure, codeMeasure, managementMeasure)            
 
-        return riskAssessment
+        return succReport
 
 
     def get_dataframe(self):
         return self.statesDf
 
 
-    # Calculate the number of commits per day, for the last D days
+    # Calculate the number of commits per day, for the last D days from the end of the project
     def get_commit_frequency(self, D):
         lastState = self.get_last_state()
         today = lastState[KEY_DURATION]
@@ -546,26 +543,27 @@ class SimProject:
  
 
 
+
+
     def get_labelled_samples(self, k):
         # We can only take as many samples as there are states
         k = min(k, len(self.statesDf))
         sampleDf = self.statesDf.sample(k)
 
-        # Evaluate whether the project was a success, producing a score in range [0,1]
-        riskAssess = self.evaluate()
+        # Evaluate whether the project was a success, producing a score in range [0,1] for each component
+        successReport = self.evaluate()
 
-        # print(str(riskAssess))
+        # Binarize each success value to 0 or 1
+        binarySuccesses = successReport.get_binary_successes()
 
-        successScore = riskAssess.get_normalised_score()
-        
-        isSuccess = 0
-        
-        if successScore > 0.6:
-            isSuccess = 1
-        # elif self.get_last_state()[KEY_STATUS] == STATUS_CANCELLED:
-        #     success = -1
-        
-        sampleDf.insert(len(sampleDf.columns), 'Success', isSuccess)
+        # Insert each success value as a new column in the sampled data-points
+        sampleDf.insert(len(sampleDf.columns), 'Finance Success', binarySuccesses[SuccessReport.KEY_FINANCE])
+        sampleDf.insert(len(sampleDf.columns), 'Timescale Success', binarySuccesses[SuccessReport.KEY_TIMESCALE])
+        sampleDf.insert(len(sampleDf.columns), 'Team Success', binarySuccesses[SuccessReport.KEY_TEAM])
+        sampleDf.insert(len(sampleDf.columns), 'Management Success', binarySuccesses[SuccessReport.KEY_MANAGEMENT])
+        sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
+        sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL_NORM])
+
         # Remove the team ranks
         return sampleDf.drop(columns=[KEY_TEAM_RANKS],axis=1)
 
