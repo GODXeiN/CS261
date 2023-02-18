@@ -14,7 +14,14 @@ Data-Generation:
     * RiskAssessment.py
         - defines a class describing success prediction for a given project state
         - include fields for success of Budget/Timescale/Code/Team/Management and Overall project success
+        - each field is a float in the range [0,1], representing the expected likelihood of that attribute succeeding
         - is instantiated based on model predictions obtained by RiskAssessmentGenerator
+
+    * RiskAssessmentGenerator.py
+        - loads trained models for prediction of each project attribute
+        - generate_ra(...) takes a project state and runs the model on that state to obtain confidence levels for each prediction
+        - then, the confidence levels are probabilistically combined with the recorded accuracy of the model, to determine an estimate for the actual likelihood of the given result (success/failure) occurring
+        - populates a RiskAssessment object based on the calculated confidence levels
 
     * SuccessReport.py
         - defines a class for representing/calculating overall success of a simulated project
