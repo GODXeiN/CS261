@@ -5,34 +5,37 @@ Data-Generation:
         - contains a Pandas Dataframe of project states, tracking the project's development over time
         - project status tracked: Planning/Development/Completion/Cancelled
         - last state used to evaluate success of project (score)
-        - currently evaluates success by weighted sum of components (primitive implementation)
-        - TODO: implement separate model components for score evaluation
+        - project success evaluated based on the last state; .evaluate() returns a SuccessReport
 
     * genDataStaged.py
         - generates fixed number of simulated projects
-        - samples given number of states from each project and writes them to testDataStaged.py
+        - samples given number of states from each project and writes them to trainDataStaged.py/testDataStaged.py, depending on the mode selected
 
-    * regLabeller.py (unfinished) 
-        - Regression model which predicts overall success based on the metrics from Rai's dataset of contributing factors
-        - uses K-Nearest neighbour imputing to "fill" missing gaps
-        - model receives hard metrics, team metrics and management metrics; returns arbitrary score
-        - will likely be split into separate component models (e.g. one for teams; one for management... etc.) later
+    * RiskAssessment.py
+        - defines a class describing success prediction for a given project state
+        - include fields for success of Budget/Timescale/Code/Team/Management and Overall project success
+        - is instantiated based on model predictions obtained by RiskAssessmentGenerator
+
+    * SuccessReport.py
+        - defines a class for representing/calculating overall success of a simulated project
+        - only used in the data-generation (i.e. genDataStaged.py)
 
 
 Risk-Assessment Model:
 
-    * logregStaged.py
-        - loads contents of "testDataStaged.csv";
-        - extracts independent features (those we predict from) and dependent variable (binary success/failure)
+    * logregTrainer.py
+        - loads contents of "/data/trainDataStaged.csv";
+        - extracts independent features (those we predict from) and the dependent variable (binary success/failure) for each project component (Budget/Timescale/Team/Code/Management, and Overall)
         - splits data into training and test data
-        - trains LogisticRegression model on 50% of data; tests model accuracy on remaining test data
+        - trains a LogisticRegression model to predict dependent variable using the generated project data
+        - each model trained on 50% of data; tests model accuracy on remaining test data
         - displays classification report (showing overall accuracy)
-        - dumps model out to "logregmodel.joblib" so it can be loaded and used elsewhere
+        - dumps models out to "/trained/" so they can be loaded and used elsewhere
     
-    * manualTest.py 
+    * testSingle.py 
         - loads LogisticRegression model
-        - generates a single project and input a single state from it into the model
-        - displays result and the sample for comparison
+        - generates a single project and inputs a single state from it into the model
+        - displays the predicted result compared to the actual simulation of the project success
 
         
         
