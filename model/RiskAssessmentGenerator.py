@@ -1,18 +1,18 @@
 from RiskAssessment import RiskAssessment
 from joblib import load
-import logregTrainer as lrt
+import logregTrainer as trainer
 
 class RiskAssessmentGenerator:
 
     def __init__(self):
         # Load all prediction models
-        self.financeModel = self.load_model_and_accuracy(lrt.FINANCE_MODEL_SAVE_DEST)
-        self.timescaleModel = self.load_model_and_accuracy(lrt.TIMESCALE_MODEL_SAVE_DEST)
-        self.codeModel = self.load_model_and_accuracy(lrt.CODE_MODEL_SAVE_DEST)
-        self.teamModel = self.load_model_and_accuracy(lrt.TEAM_MODEL_SAVE_DEST)
-        self.managementModel = self.load_model_and_accuracy(lrt.MANAGEMENT_MODEL_SAVE_DEST)
+        self.financeModel = self.load_model_and_accuracy(trainer.FINANCE_MODEL_SAVE_DEST)
+        self.timescaleModel = self.load_model_and_accuracy(trainer.TIMESCALE_MODEL_SAVE_DEST)
+        self.codeModel = self.load_model_and_accuracy(trainer.CODE_MODEL_SAVE_DEST)
+        self.teamModel = self.load_model_and_accuracy(trainer.TEAM_MODEL_SAVE_DEST)
+        self.managementModel = self.load_model_and_accuracy(trainer.MANAGEMENT_MODEL_SAVE_DEST)
 
-        self.overallSuccessModel = self.load_model_and_accuracy(lrt.OVERALL_MODEL_SAVE_DEST)
+        self.overallSuccessModel = self.load_model_and_accuracy(trainer.OVERALL_MODEL_SAVE_DEST)
         print("Loaded all models")
 
     def load_model_and_accuracy(self, destAndAccuracy):
@@ -31,12 +31,11 @@ class RiskAssessmentGenerator:
 
         # Determine the overall chance of success by using Conditional Probability & Bayes Formula
         # SUCCESS = MODEL_SUCCESS * MODEL_ACCURATE + (1-MODEL_FAILURE) * MODEL_INACCURATE
-        overallSuccessEst = confProbs[1] * mdlAccuracy + confProbs[0] * (1-mdlAccuracy)
+        overallSuccessFloat = confProbs[1] * mdlAccuracy + confProbs[0] * (1-mdlAccuracy)
         # Convert estimation to a probability
-        overallSuccessProb = round(100 * overallSuccessEst, 2)
-
-        print("Success:", str(overallSuccessProb) + "%")
-        return overallSuccessProb
+        # overallSuccessProb = round(100 * overallSuccessFloat, 2)
+        # print("Success:", str(overallSuccessProb) + "%")
+        return overallSuccessFloat
 
 
 
@@ -54,12 +53,4 @@ class RiskAssessmentGenerator:
 
         ra.set_success_values(financeScore, timescaleScore, teamScore, codeScore, managementScore, overallSuccess)
         return ra
-
-
-
-
-        
-
-
-
         

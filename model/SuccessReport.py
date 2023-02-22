@@ -4,7 +4,6 @@ KEY_TIMESCALE = 'Timescale'
 KEY_MANAGEMENT = 'Management'
 KEY_CODE = 'Code'
 KEY_OVERALL = 'Overall'
-KEY_OVERALL_NORM = 'Overall Normalised'
 
 
 
@@ -44,7 +43,7 @@ class SuccessReport:
         if maxPossibleScore > 0.0:
             # Transform the overall assessment success score to range [0,1] 
             # by calculating it as a proportion of the maximum possible score
-            self.successValues[KEY_OVERALL_NORM] = overallSuccess / maxPossibleScore
+            self.successValues[KEY_OVERALL] = overallSuccess / maxPossibleScore
 
 
     # Attempts to retrieve the success value corresponding to the given key
@@ -71,8 +70,15 @@ class SuccessReport:
 
 
     def get_normalised_score(self):
-        return self.get_success_attribute(KEY_OVERALL_NORM)
+        return self.get_success_attribute(KEY_OVERALL)
 
 
     def __str__(self):
-        return str(self.successValues)
+        s = "\n  -----  SUCCESS REPORT  -----  "
+        for (key, val) in self.successValues.items():
+            s += "\n  * " + key.ljust(12) + " = "
+            if val >= 0.5:
+                s += "Success (1)"
+            else:
+                s += "Failure (0)"
+        return s

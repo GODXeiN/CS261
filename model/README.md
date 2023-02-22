@@ -1,4 +1,15 @@
-Data-Generation:
+# Overview:
+Preface for the Risk-Assessment-Model (RAM) and Machine-Learning component.
+
+This section is split into two primary elements: Data-Generation, and Success-Prediction.
+
+
+# Data-Generation:
+This section produces the labelled data-set of projects ("/data/trainDataStaged.csv") which is used to train the Machine-Learning model.
+The ML only learns relationships which appear in the data-set, so its important that we have as many rows as possible with high variation to avoid overfitting the model to the specific data we give it (i.e. we want it to generalise well).
+
+The Data-Generation is effectively the mass simulation of projects with arbitrary starting parameters. 
+For each simulated project, the progress is maintained; progress increases as a function of the team and various soft metrics (it may also decrease probabilitically). When the project progress reached 100%, the project is marked as complete and the simulation stops. Now, the module evaluates the final project state based on the five independent key Aspects (Finance, Deadline, Team, Code, Management), producing binary values for success for each component (i.e. 0 = Failure, 1 = Success). The overall project evaluation is calculated with a weighted score of these individual aspects. For each project, this results in 6 bits (0 or 1) indicating if the project succeeded in that area. Then one ML model is trained to recognise the attribute values which lead to success/failure for each component and another model considers the overall success. The component-wise evaluation allows greater granularity in the feedback provided to the user.
 
     * projectDf.py
         - defines SimProject class, representing data about a a single artificial project
@@ -28,7 +39,13 @@ Data-Generation:
         - only used in the data-generation (i.e. genDataStaged.py)
 
 
-Risk-Assessment Model:
+# Success-Prediction Model:
+The model consists of 6 Logistic Regression modules each of which predict one success field of the project.
+All the models are trained on the full training dataset and all fields, so the model should also learns implicit relationships, rather than being specialised for the individual metrics which are relevant to the aspect in question.
+For example, the Finance model is not trained specifically on the fields which impact finance (Budget, Cost, Team Expertise).
+These models are exported to the /trained/ directory using Joblib.dump and can be loaded back in with Joblib.load.
+
+Then, the Risk-Assessment class describes a single prediction provided by the RiskAssessmentGenerator class (RAG). Given a project snapshot (i.e. a set of all project metrics for some point in time), the RAG.generate_ra() method runs all predictive models on the snapshot and gets the confidence score for their predictions. Then, by applying Bayes Formula for Conditional Probability with the accuracy of each model (recorded after testing), we can determine the overall probability that the project succeeds, irrespective of the model. As such, we are more likely to receive an accurate prediction since we consider the chance that the model is incorrect.
 
     * logregTrainer.py
         - loads contents of "/data/trainDataStaged.csv";
@@ -38,12 +55,16 @@ Risk-Assessment Model:
         - each model trained on 50% of data; tests model accuracy on remaining test data
         - displays classification report (showing overall accuracy)
         - dumps models out to "/trained/" so they can be loaded and used elsewhere
-    
+
+    * testBulk.py
+        - loads contents of "/data/testDataStaged.csv"
+        - loads all 6 trained models
+        - runs Success-Prediction models against test data
+        - displays Classification Report (accuracy) of each model
+
     * testSingle.py 
         - loads LogisticRegression model
         - generates a single project and inputs a single state from it into the model
         - displays the predicted result compared to the actual simulation of the project success
 
         
-        
-

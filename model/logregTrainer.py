@@ -53,7 +53,7 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
     # Split the imported data into training and test components
     # Stratify ensures that the proportion of each class is maintained
     # e.g. if the data contains 25% success, then training contains 25% success and test data contains 25% success
-    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=1, stratify=y)
+    X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.1, random_state=1, stratify=y)
     # print("Split dataset into stratified training and test samples")
 
     # TRAINING using training dataset

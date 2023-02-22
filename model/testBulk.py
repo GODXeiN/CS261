@@ -7,13 +7,12 @@ import numpy as np
 from projectDf import independent_headers
 from sklearn.metrics import classification_report
 
-from logregStaged import MODEL_SAVE_DEST, MODEL_ACCURACY_DEST
+from logregTrainer import OVERALL_MODEL_SAVE_DEST
 from projectDf import independent_headers
 
 
-
 # Reload the model from the saved dump
-pipeLR = load(MODEL_SAVE_DEST)
+pipeLR = load(OVERALL_MODEL_SAVE_DEST[0])
 
 # Manual Test (Can be removed)
 # Creates a project, finds its success then gets the model to predict.
@@ -35,10 +34,6 @@ y_pred = pipeLR.predict(x)
 print(classification_report(y, y_pred))
 
 
-
 # Get the model accuracy and write it to a file
 result = pipeLR.score(x, y)
 print("Overall accuracy:", str(result))
-mdlAccuracyFile = open(MODEL_ACCURACY_DEST,'w')
-mdlAccuracyFile.write(str(result))
-mdlAccuracyFile.close()

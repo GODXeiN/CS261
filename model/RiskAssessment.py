@@ -1,5 +1,6 @@
 
-# Stores success
+# Stores the success probabilities as provided by the model for a given project.
+# Each Risk-Assessment describes the confidence in a single project's success at a given point in its development, so this object can be passed to the Suggestions Provider. 
 
 
 # Keys for Success Value dictionary
@@ -34,4 +35,8 @@ class RiskAssessment:
         return None
 
     def __str__(self):
-        return str(self.successValues)
+        s = "\n  -----  RISK ASSESSMENT  -----  \n"
+        s += "Estimated Success Probabilities:"
+        for (key, val) in self.successValues.items():
+            s += "\n  * " + key.ljust(12) + " = " + str(val)
+        return s

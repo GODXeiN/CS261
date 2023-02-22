@@ -12,7 +12,12 @@ KEY_BUDGET = 'Budget'
 KEY_HARD_BUDGET = 'Hard Budget'
 KEY_COST_TO_DATE = 'Cost'
 KEY_DURATION = 'Duration'
-KEY_DEADLINE = 'Schedule'
+KEY_OVERALL_DEADLINE = 'Overall Deadline'
+# Internal project deadlines (effectively checkpoints)
+KEY_ACTIVE_SUBDEADLINES = 'Active Subdeadlines'             # List of deadlines which are upcoming
+KEY_NUM_SUBDEADLINE_TOTAL = 'Total Subdeadlines'            # Number of internal deadlines for the entire project
+KEY_NUM_SUBDEADLINE_EXPIRED = 'Expired Subdeadlines'        # Number of internal deadlines which have passed
+KEY_NUM_SUBDEADLINE_MET = 'Met Subdeadlines'                # Number of expired internal deadlines which the project met the required progress
 # Team metrics
 KEY_TEAM_AVG_RANK = 'Average Team Experience'
 KEY_TEAM_SIZE = 'Team Size'
@@ -35,10 +40,10 @@ KEY_PROGRESS = 'Progress'
 SOFT_METRIC_MIN = 1
 SOFT_METRIC_MAX = 5
 
-STATUS_PLANNING = 'Planning'
-STATUS_DEVELOPING = 'Development'
-STATUS_COMPLETE = 'Complete'
-STATUS_CANCELLED = 'Cancelled'
+STATUS_PLANNING = 0
+STATUS_DEVELOPING = 1
+STATUS_COMPLETE = 2
+STATUS_CANCELLED = -1
 
 # When a project passes its deadline/budget, management support decreases each week
 OVERRUN_SUPPORT_MULTIPLIER = 0.999
@@ -49,9 +54,7 @@ MAX_TEAM_SIZE = 6
 # Placeholders, will be replaced with actual values when appropriate
 softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
                             KEY_MET_COMMITMENT: 4.0,
-                            KEY_MET_MORALE: 3.0,
-                            KEY_MET_PLANNING: 4.0,
-                            KEY_MET_SUPPORT: 2.0 }
+                            KEY_MET_MORALE: 3.0 }
 
 
 # Given a project state, return the fraction of known bugs which have been resolved
@@ -108,7 +111,8 @@ def calc_ratio_safe(num, denom):
 
 
 # All column headers for the state dataframe
-metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
+metric_headers = [KEY_ID,KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
+                  KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET,
                   KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
                   KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                   KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
@@ -116,7 +120,8 @@ metric_headers = [KEY_ID,KEY_BUDGET, KEY_DEADLINE, KEY_COST_TO_DATE, KEY_DURATIO
 
 
 # Columns which should be used as input for the prediction model 
-independent_headers = [KEY_BUDGET, KEY_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
+independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
+                        KEY_NUM_SUBDEADLINE_EXPIRED, KEY_NUM_SUBDEADLINE_MET,
                         KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
                         KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                         KEY_TEAM_AVG_RANK]
@@ -133,8 +138,7 @@ class SimProject:
         self.projectID = pid
 
         # Determines complexity and scale of the project (influencing team + budget)
-        # TODO: change this back to between 1-10
-        projectScale = random.randint(1,4) / 10.0
+        projectScale = random.randint(1,10) / 10.0
 
         softBdgt = self.generate_budget(minBudget, maxBudget, unitBudget, projectScale)
         softDl = self.generate_deadline(minDeadline, maxDeadline, projectScale)
@@ -142,14 +146,14 @@ class SimProject:
         # Create an initial status for the project
         initRow = self.make_state(STATUS_PLANNING)
         initRow[KEY_BUDGET] = softBdgt
-        initRow[KEY_DEADLINE] = softDl
+        initRow[KEY_OVERALL_DEADLINE] = softDl
         initRow[KEY_COST_TO_DATE] = 0
         initRow[KEY_DURATION] = 0
 
         # Generate the development ranks for a random team
-        # A larger project is permitted to have a larger dev team
+        # A larger project is permitted to have a larger dev team (but not required to)
         teamRanks = []
-        teamSize = int(random.randint(1, MAX_TEAM_SIZE) * 10 * projectScale)
+        teamSize = int(random.randint(1, MAX_TEAM_SIZE * 10 * projectScale))
         totalRank = 0
         for i in range(0, teamSize):
             rank = random.randint(1,5)
@@ -159,6 +163,44 @@ class SimProject:
         avgRank = totalRank / teamSize
         initRow[KEY_TEAM_AVG_RANK] = avgRank
         initRow[KEY_TEAM_RANKS] = teamRanks
+
+        MAX_INIT_SUBDEADLINES = 20
+
+        # 50% chance to have subdeadlines set from project start
+        if random.random() < 1:
+            initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * (0.95 * exponential(random.random(), 5, 1, 0) + 0.05))
+
+            startDate = 0
+            endDate = initRow[KEY_OVERALL_DEADLINE]
+            projectLength = endDate - startDate
+            subdeadlines = []
+
+            # Equally space deadline within the project's timeframe
+            intervalBetweenDeadlines = int((endDate - startDate) / (initRow[KEY_NUM_SUBDEADLINE_TOTAL] + 1))
+
+            # We want some randomness in the deadline dates, but we need to ensure they balance out over the entire project
+            # Therefore, we keep the last "extension" amount and use it to shrink the next deadline
+            lastRandomExtensionAmt = 0
+
+            # Generate the deadlines and the progress expected by that point in the project
+            for i in range(0, initRow[KEY_NUM_SUBDEADLINE_TOTAL]):
+                dlDay = startDate + intervalBetweenDeadlines
+
+                if lastRandomExtensionAmt > 0:
+                    dlDay -= lastRandomExtensionAmt
+                    lastRandomExtensionAmt = 0
+                else:
+                    lastRandomExtensionAmt = random.randint(0, int(projectLength / 20))
+                    dlDay += lastRandomExtensionAmt
+
+                expectedProgress = dlDay / endDate
+                progress = expectedProgress
+                startDate = dlDay + 1
+                # Store subdeadlines as a tuple, representing the target day, and the expected progress in the range [0,1]
+                subdeadlines.append((dlDay, expectedProgress))
+
+            initRow[KEY_ACTIVE_SUBDEADLINES] = subdeadlines
+            # print(str(subdeadlines))
 
         # Initialise soft metrics randomly
         initRow[KEY_MET_COMMUNICATION] = (round(avgRank, 2) + rand_metric_value()) / 2
@@ -174,8 +216,10 @@ class SimProject:
     def make_state(self, status):
         state = {
                     KEY_ID:self.projectID,
-                    KEY_BUDGET:0, KEY_DEADLINE:0,
+                    KEY_BUDGET:0, KEY_OVERALL_DEADLINE:0,
                     KEY_COST_TO_DATE:0, KEY_DURATION:0, 
+                    KEY_NUM_SUBDEADLINE_TOTAL:0, KEY_NUM_SUBDEADLINE_MET:0,
+                    KEY_ACTIVE_SUBDEADLINES:[], KEY_NUM_SUBDEADLINE_EXPIRED:0,
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0,
                     KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
                     KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0,
@@ -195,7 +239,7 @@ class SimProject:
     # Uses Exponential decay function
     def get_cancellation_chance(self, state):
         k = -20
-        # Get support metric in range [0,1]
+        # Get support metric as a float in the range [0,1]
         support = state[KEY_MET_SUPPORT] / SOFT_METRIC_MAX
         return 0.5 * exponential(support, k, 0, 0)
 
@@ -311,6 +355,42 @@ class SimProject:
         state[KEY_PROGRESS] = min(1, state[KEY_PROGRESS] + delta)
 
 
+
+    # Check if we've passed (met or missed) any internal deadlines, and if so,
+    # make them no longer active and record the result of the deadline
+    def checkForExpiredDeadlines(self, state):
+        activeDeadlines = state[KEY_ACTIVE_SUBDEADLINES]
+        currentProgress = state[KEY_PROGRESS]
+        currentDay = state[KEY_DURATION]
+        current = (currentDay, currentProgress)
+
+        while len(activeDeadlines) > 0:
+            # Get the day of the deadline and the expected progress
+            subdl = activeDeadlines[0]
+            (dlDay, expProgress) = subdl
+
+            # If the project has passed the deadline's required progress
+            if currentProgress >= expProgress:
+                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
+                activeDeadlines.pop(0)
+                # print("Met a deadline!")
+                state[KEY_NUM_SUBDEADLINE_MET] += 1
+            # Otherwise, if progress is insufficient and the deadline has passed 
+            elif currentDay >= dlDay:
+                # Move the deadline to the list of expired deadlines
+                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
+                activeDeadlines.pop(0)
+
+                # print("Deadline check. Current:", str(current), "vs DL:", str(subdl))
+                # if currentProgress < expProgress:
+                    # print("Missed a deadline!")
+            # Otherwise, stop checking, as the next deadline is still in the future but hasn't been met yet
+            else:
+                break
+
+        
+
+
     # Calculates the cost of paying development team for the given interval and adds that
     # amount to the cumulative cost of the project
     def include_team_costs(self, state, intervalLen):
@@ -344,7 +424,7 @@ class SimProject:
 
     # Simulate the project's development, generating states until completion
     def simulate(self):
-        dl = self.get_last_state()[KEY_DEADLINE]
+        dl = self.get_last_state()[KEY_OVERALL_DEADLINE]
 
         # Store newly-generated states in a list, so they can be added to the dataframe together
         newStates = []
@@ -354,7 +434,7 @@ class SimProject:
         weeksPlanning = int(prevState[KEY_MET_PLANNING]) * (0.75 + random.random() / 2)
         totalPlanningTime = weeksPlanning * 7
 
-        # Days between state updates
+        # Number of days between state updates
         intervalLen = 1
 
         stopSim = False
@@ -363,8 +443,11 @@ class SimProject:
         while not stopSim:
             newState = self.copy_row(prevState)
 
+            newState[KEY_DURATION] += intervalLen
+
             # If project is being planned
             if newState[KEY_STATUS] == STATUS_PLANNING:
+                # Add some arbitrary planning costs
                 newState[KEY_COST_TO_DATE] = random.randint(0,500) * intervalLen
 
                 # If planning is complete, move to development
@@ -383,6 +466,8 @@ class SimProject:
                     newState[KEY_STATUS] = STATUS_COMPLETE
                     stopSim = True
 
+                self.checkForExpiredDeadlines(newState)
+
             cancellation_chance = self.get_cancellation_chance(newState)
             if random.random() < cancellation_chance:
                 newState[KEY_STATUS] = STATUS_CANCELLED
@@ -392,7 +477,6 @@ class SimProject:
             if newState[KEY_DURATION] > dl or newState[KEY_COST_TO_DATE] > newState[KEY_BUDGET]:
                 newState[KEY_MET_SUPPORT] *= OVERRUN_SUPPORT_MULTIPLIER
 
-            newState[KEY_DURATION] += intervalLen
             prevState = newState
             newStates.append(newState)
 
@@ -443,17 +527,24 @@ class SimProject:
 
     ## Project State Component Analysis
     # Each of these methods returns a float from 0 to 1
+
+    # Metrics Used: Budget; CostToDate
     def eval_finance(self, state):
         bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST_TO_DATE])
         return sigmoid_func(bdgtRatio)
 
+    # Metrics Used: Deadline; Duration
     def eval_time(self, state):
-        dlRatio = calc_ratio_safe(state[KEY_DEADLINE], state[KEY_DURATION])
-        return sigmoid_func(dlRatio)
+        overallDlratio = calc_ratio_safe(state[KEY_OVERALL_DEADLINE], state[KEY_DURATION])
+        # Proportion of deadlines which have passed which have been met
+        subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
+        return (sigmoid_func(overallDlratio) + subDlRatio) / 2
 
+    # Metrics Used: Top-Level Management Support; Project Planning
     def eval_management(self, state):
         return (state[KEY_MET_SUPPORT] + state[KEY_MET_PLANNING]) / (2 * SOFT_METRIC_MAX)
 
+    # Metrics Used: CommitFrequency; ResolvedBugs; TotalBugs
     def eval_code(self, state):
         # Get an estimate for project activity by considering commit frequency 
         # before and after the last 30 days
@@ -463,6 +554,7 @@ class SimProject:
         resolvedBugRatio = calc_proportion_bugs_resolved(state)
         return (activityRatio + resolvedBugRatio) / 2
 
+    # Metrics Used: Team Commitment; Team Morale; Team Confidence 
     def eval_team(self, state):
         totalTeamScore = 0
         maxPossScore = 0
@@ -548,7 +640,7 @@ class SimProject:
     def get_labelled_samples(self, k):
         # We can only take as many samples as there are states
         k = min(k, len(self.statesDf))
-        sampleDf = self.statesDf.sample(k)
+        sampleDf = self.statesDf.sample(k)[independent_headers]
 
         # Evaluate whether the project was a success, producing a score in range [0,1] for each component
         successReport = self.evaluate()
@@ -562,10 +654,8 @@ class SimProject:
         sampleDf.insert(len(sampleDf.columns), 'Team Success', binarySuccesses[SuccessReport.KEY_TEAM])
         sampleDf.insert(len(sampleDf.columns), 'Management Success', binarySuccesses[SuccessReport.KEY_MANAGEMENT])
         sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
-        sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL_NORM])
+        sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL])
 
-        # Remove the team ranks
-        return sampleDf.drop(columns=[KEY_TEAM_RANKS],axis=1)
-
+        return sampleDf
 
 
