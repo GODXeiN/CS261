@@ -132,6 +132,42 @@ independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_COST_TO_DATE, KEY_D
 class SimProject:
     rand = random
 
+    def add_initial_sub_deadlines(self, initRow):
+        MAX_INIT_SUBDEADLINES = 20
+        initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * (0.95 * exponential(random.random(), 5, 1, 0) + 0.05))
+
+        startDate = 0
+        endDate = initRow[KEY_OVERALL_DEADLINE]
+        projectLength = endDate - startDate
+        subdeadlines = []
+
+        # Equally space deadline within the project's timeframe
+        intervalBetweenDeadlines = int((endDate - startDate) / (initRow[KEY_NUM_SUBDEADLINE_TOTAL] + 1))
+
+        # We want some randomness in the deadline dates, but we need to ensure they balance out over the entire project
+        # Therefore, we keep the last "extension" amount and use it to shrink the next deadline
+        lastRandomExtensionAmt = 0
+
+        # Generate the deadlines and the progress expected by that point in the project
+        for i in range(0, initRow[KEY_NUM_SUBDEADLINE_TOTAL]):
+            dlDay = startDate + intervalBetweenDeadlines
+
+            if lastRandomExtensionAmt > 0:
+                dlDay -= lastRandomExtensionAmt
+                lastRandomExtensionAmt = 0
+            else:
+                lastRandomExtensionAmt = random.randint(0, int(projectLength / 20))
+                dlDay += lastRandomExtensionAmt
+
+            expectedProgress = dlDay / endDate
+            startDate = dlDay + 1
+            # Store subdeadlines as a tuple, representing the target day, and the expected progress in the range [0,1]
+            subdeadlines.append((dlDay, expectedProgress))
+
+        initRow[KEY_ACTIVE_SUBDEADLINES] = subdeadlines
+        # print(str(subdeadlines))
+
+
     def __init__(self, pid, minBudget, maxBudget, unitBudget, minDeadline, maxDeadline):
         self.statesDf = pd.DataFrame(columns=metric_headers)
 
@@ -164,43 +200,7 @@ class SimProject:
         initRow[KEY_TEAM_AVG_RANK] = avgRank
         initRow[KEY_TEAM_RANKS] = teamRanks
 
-        MAX_INIT_SUBDEADLINES = 20
-
-        # 50% chance to have subdeadlines set from project start
-        if random.random() < 1:
-            initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * (0.95 * exponential(random.random(), 5, 1, 0) + 0.05))
-
-            startDate = 0
-            endDate = initRow[KEY_OVERALL_DEADLINE]
-            projectLength = endDate - startDate
-            subdeadlines = []
-
-            # Equally space deadline within the project's timeframe
-            intervalBetweenDeadlines = int((endDate - startDate) / (initRow[KEY_NUM_SUBDEADLINE_TOTAL] + 1))
-
-            # We want some randomness in the deadline dates, but we need to ensure they balance out over the entire project
-            # Therefore, we keep the last "extension" amount and use it to shrink the next deadline
-            lastRandomExtensionAmt = 0
-
-            # Generate the deadlines and the progress expected by that point in the project
-            for i in range(0, initRow[KEY_NUM_SUBDEADLINE_TOTAL]):
-                dlDay = startDate + intervalBetweenDeadlines
-
-                if lastRandomExtensionAmt > 0:
-                    dlDay -= lastRandomExtensionAmt
-                    lastRandomExtensionAmt = 0
-                else:
-                    lastRandomExtensionAmt = random.randint(0, int(projectLength / 20))
-                    dlDay += lastRandomExtensionAmt
-
-                expectedProgress = dlDay / endDate
-                progress = expectedProgress
-                startDate = dlDay + 1
-                # Store subdeadlines as a tuple, representing the target day, and the expected progress in the range [0,1]
-                subdeadlines.append((dlDay, expectedProgress))
-
-            initRow[KEY_ACTIVE_SUBDEADLINES] = subdeadlines
-            # print(str(subdeadlines))
+        self.add_initial_sub_deadlines(initRow)
 
         # Initialise soft metrics randomly
         initRow[KEY_MET_COMMUNICATION] = (round(avgRank, 2) + rand_metric_value()) / 2
@@ -211,6 +211,7 @@ class SimProject:
 
         self.append_state(initRow)
         
+
 
     # Create a new blank project state (Dataframe row) with the given status
     def make_state(self, status):
@@ -536,13 +537,16 @@ class SimProject:
     # Metrics Used: Deadline; Duration
     def eval_time(self, state):
         overallDlratio = calc_ratio_safe(state[KEY_OVERALL_DEADLINE], state[KEY_DURATION])
+        return sigmoid_func(overallDlratio)
         # Proportion of deadlines which have passed which have been met
-        subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
-        return (sigmoid_func(overallDlratio) + subDlRatio) / 2
+        # subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
+        # return (sigmoid_func(overallDlratio) + subDlRatio) / 2
 
     # Metrics Used: Top-Level Management Support; Project Planning
     def eval_management(self, state):
-        return (state[KEY_MET_SUPPORT] + state[KEY_MET_PLANNING]) / (2 * SOFT_METRIC_MAX)
+        supportPlusPlanning = (state[KEY_MET_SUPPORT] + state[KEY_MET_PLANNING]) / (2 * SOFT_METRIC_MAX)
+        subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
+        return (supportPlusPlanning + subDlRatio) / 2
 
     # Metrics Used: CommitFrequency; ResolvedBugs; TotalBugs
     def eval_code(self, state):
@@ -656,6 +660,7 @@ class SimProject:
         sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
         sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL])
 
+        # Remove the team ranks
         return sampleDf
 
 

@@ -22,8 +22,8 @@ SAMPLES_PER_PROJECT = 1
 def generate_sample_data(mode):
     if mode == MODE_GEN_TRAIN:
         destFilename = FILE_TRAIN
-        NUM_PROJECTS_GENERATED = 200
-        SAMPLES_PER_PROJECT = 3
+        NUM_PROJECTS_GENERATED = 1000
+        SAMPLES_PER_PROJECT = 1
         infoTxt = "Generating Training Data..."
     elif mode == MODE_GEN_TEST:
         destFilename = FILE_TEST
