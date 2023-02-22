@@ -46,21 +46,33 @@ class Git_Link:
         except:
             return repos
     
-    def getIssueCount(self):
+    def getOpenIssueCount(self):
         issues = self.repo.get_issues(state='open')
+        count = 0
+        for issue in issues:
+            count+=1
+        return count
+    
+    def getClosedIssueCount(self):
+        issues = self.repo.get_issues(state='closed')
         count = 0
         for issue in issues:
             count+=1
         return count
 
     def getCommitFreq(self):
-        #Alter for different frequencies
-        since = datetime.now() - timedelta(1)
-        commits = self.repo.get_commits(since=since)
-        commitCount = 0
-        for commit in commits:
-            commitCount+=1
-        return commitCount
+        #Commits over the last 28 days
+        since = datetime.now() - timedelta(28)
+        monthCommits = self.repo.get_commits(since=since)
+        totalCommits = self.repo.get_commits()
+        monthCount = 0
+        totalCount = 0
+        for commit in monthCommits:
+            monthCount+=1
+        for commit in totalCommits:
+            totalCount+=1
+
+        return monthCount/totalCount
 
 
 
@@ -73,7 +85,7 @@ def main():
     #     token = input()
     #     if gl.checkToken(token):
     #         validToken = True
-    token = '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'
+    token = 'addTokenHere'
 
     # validURL = False
     # while not validURL:
@@ -87,7 +99,8 @@ def main():
     
     gitLink = Git_Link(token,url)
 
-    print(gitLink.getIssueCount())
+    print(gitLink.getOpenIssueCount())
+    print(gitLink.getClosedIssueCount())
     print(gitLink.getCommitFreq())
 
 main()
