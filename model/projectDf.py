@@ -4,39 +4,54 @@ import pandas as pd
 import numpy as np
 
 import SuccessReport
+from dataManipulation import calc_ratio_safe, exponential, sigmoid_func
 
-
+## Project-level metrics
 KEY_ID = 'pID'
-# Hard metrics
+KEY_STATUS = 'Status'
+KEY_PROGRESS = 'Progress'
+
+## Hard metrics
 KEY_BUDGET = 'Budget'
 KEY_HARD_BUDGET = 'Hard Budget'
 KEY_COST_TO_DATE = 'Cost'
 KEY_DURATION = 'Duration'
 KEY_OVERALL_DEADLINE = 'Overall Deadline'
-KEY_BUDGET_ELAPSED = 'Budget Elapsed'                       # Float in range [0,1] representing Cost as a proportion of Budget
-KEY_TIME_ELAPSED = 'Time Elapsed'                           # Float in range [0,1] representing proportion of overall deadline which has passed
-# Internal project deadlines (effectively checkpoints)
-KEY_ACTIVE_SUBDEADLINES = 'Active Subdeadlines'             # List of deadlines which are upcoming
-KEY_NUM_SUBDEADLINE_TOTAL = 'Total Subdeadlines'            # Number of internal deadlines for the entire project
-KEY_NUM_SUBDEADLINE_EXPIRED = 'Expired Subdeadlines'        # Number of internal deadlines which have passed
-KEY_NUM_SUBDEADLINE_MET = 'Met Subdeadlines'                # Number of expired internal deadlines which the project met the required progress
-# Team metrics
+# Float in range [0,1] representing Cost as a proportion of Budget
+KEY_BUDGET_ELAPSED = 'Budget Elapsed'                       
+# Float in range [0,1] representing proportion of overall deadline which has passed
+KEY_TIME_ELAPSED = 'Time Elapsed'                           
+
+## Internal project deadlines (development checkpoints)
+# List of deadlines which are upcoming
+KEY_ACTIVE_SUBDEADLINES = 'Active Subdeadlines'      
+# Number of internal deadlines for the entire project       
+KEY_NUM_SUBDEADLINE_TOTAL = 'Total Subdeadlines'            
+# Number of internal deadlines which have passed
+KEY_NUM_SUBDEADLINE_EXPIRED = 'Expired Subdeadlines'        
+# Number of expired internal deadlines which the project met the required progress
+KEY_NUM_SUBDEADLINE_MET = 'Met Subdeadlines'                
+# Float in range [0,1], representing (Met Subdeadlines) / (Expired Subdeadlines)
+KEY_SUBDEADLINES_MET_PROPORTION = 'Proportion Subdeadlines Met' 
+
+## Team metrics
 KEY_TEAM_AVG_RANK = 'Average Team Experience'
 KEY_TEAM_SIZE = 'Team Size'
 KEY_TEAM_RANKS = 'Team Ranks'
-# Soft metrics
+
+## Soft metrics
 KEY_MET_COMMUNICATION = 'Team Communication'
 KEY_MET_MORALE = 'Team Morale'
 KEY_MET_SUPPORT = 'Top-Level Management Support'
 KEY_MET_PLANNING = 'Project Planning'
 KEY_MET_COMMITMENT = 'Team Commitment'
-# Code metrics
+
+## Code metrics
 KEY_CODE_BUGS_TOTAL = 'Total Defects'
 KEY_CODE_BUGS_RESOLVED = 'Fixed Defects'
+## Float in range [0,1] representing (Resolved Bugs) / (Total Bugs)
+KEY_CODE_BUGS_RESOLUTION = 'Defect Fix Rate'
 KEY_CODE_COMMITS = 'Commits'
-# Project metrics
-KEY_STATUS = 'Status'
-KEY_PROGRESS = 'Progress'
 
 # Range of values for soft metrics 
 SOFT_METRIC_MIN = 1
@@ -63,8 +78,8 @@ softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
 metric_headers = [KEY_ID, 
                   KEY_BUDGET, KEY_COST_TO_DATE, KEY_BUDGET_ELAPSED,
                   KEY_OVERALL_DEADLINE, KEY_DURATION, KEY_TIME_ELAPSED, 
-                  KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET,
-                  KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
+                  KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET, KEY_SUBDEADLINES_MET_PROPORTION,
+                  KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, KEY_CODE_BUGS_RESOLUTION ,
                   KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                   KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
                   KEY_STATUS, KEY_PROGRESS]
@@ -72,8 +87,8 @@ metric_headers = [KEY_ID,
 
 # Columns which should be used as input for the prediction model 
 independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_BUDGET_ELAPSED, KEY_TIME_ELAPSED, 
-                        KEY_NUM_SUBDEADLINE_EXPIRED, KEY_NUM_SUBDEADLINE_MET,
-                        KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
+                        KEY_SUBDEADLINES_MET_PROPORTION,
+                        KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLUTION, 
                         KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
                         KEY_TEAM_AVG_RANK]
 
@@ -108,29 +123,6 @@ def status_to_string(status):
 # Returns a randomly-generated float between 1 and 5, to 2.dp
 def rand_metric_value():
     return round(SOFT_METRIC_MIN + random.random() * (SOFT_METRIC_MAX - SOFT_METRIC_MIN), 2)
-
-
-# Logistic function to compress values into the range [0,1]
-def sigmoid_func(x):
-    k = 5       # Steepness
-    x_0 = 1     # Centered around 1
-    exp = math.exp(-k*(x-x_0))
-    return 1 / (1+exp)
-
-
-# Convenience method for generating exponentially-distributed values for a given set of parameters/coefficients
-def exponential(x, k, x_0, c):
-    return math.exp(k*(x-x_0)) + c
-
-
-
-# Divides num by denom, then standardises with a logistic function
-# Avoids dividing by zero
-def calc_ratio_safe(num, denom):
-    if denom > 0:
-        return float(num) / float(denom)
-    return 0
-
 
 
 # Represents a simulated Project
@@ -231,11 +223,11 @@ class SimProject:
     def make_state(self, status):
         state = {
                     KEY_ID:self.projectID,
-                    KEY_BUDGET:0, KEY_COST_TO_DATE:0, KEY_BUDGET_ELAPSED:0,
-                    KEY_OVERALL_DEADLINE:0, KEY_DURATION:0, KEY_TIME_ELAPSED:0,
-                    KEY_NUM_SUBDEADLINE_TOTAL:0, KEY_NUM_SUBDEADLINE_MET:0,
+                    KEY_BUDGET:0, KEY_COST_TO_DATE:0, KEY_BUDGET_ELAPSED:0.0,
+                    KEY_OVERALL_DEADLINE:0, KEY_DURATION:0, KEY_TIME_ELAPSED:0.0,
+                    KEY_NUM_SUBDEADLINE_TOTAL:0, KEY_NUM_SUBDEADLINE_MET:0, KEY_SUBDEADLINES_MET_PROPORTION:0.0,
                     KEY_ACTIVE_SUBDEADLINES:[], KEY_NUM_SUBDEADLINE_EXPIRED:0,
-                    KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0,
+                    KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0, KEY_CODE_BUGS_RESOLUTION:0.0,
                     KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
                     KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0,
                     KEY_PROGRESS: 0,
@@ -297,9 +289,6 @@ class SimProject:
 
     # For the given state, add commits from the dev team and update the number of bugs
     def add_commits_and_bugs(self, state, intervalLen):
-        # Get the number of unresolved bugs in the codebase
-        existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
-
         devTeam = state[KEY_TEAM_RANKS]
 
         # Number of commits is proportional to the morale and dev team size
@@ -307,9 +296,10 @@ class SimProject:
         newBugs = 0
         newResolvedBugs = 0
 
+        # Get the number of unresolved bugs in the codebase
         existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
-        for rank in devTeam:
+        for experience in devTeam:
             newDevCommits = random.randint(0, int(state[KEY_MET_MORALE]) * intervalLen)
             newCommits += newDevCommits
             # Calculate the chance of a developer not fixing a bug, based on their experience
@@ -318,13 +308,13 @@ class SimProject:
             #   Rank=5 means 30% chance of creating a bug
 
             # Get estimate of team dedication (0-1)
-            dedication = (rank + state[KEY_MET_COMMITMENT]) / 2 * SOFT_METRIC_MAX
+            dedication = (experience + state[KEY_MET_COMMITMENT]) / (2 * SOFT_METRIC_MAX)
             bugLikelihood = 0.75 * exponential(dedication, 1, 0, 0)
 
             # Include some random number of bugs
             commitBugs = 0
-            # TODO: make a probabilistic exponential decay function, in terms of rank
-            for i in range(0, random.randint(0,20 - rank * 2)):
+            timeToAddBugs = int(20 * exponential(dedication, -1, 0, 0))
+            for i in range(0, timeToAddBugs):
                 if random.random() < bugLikelihood:
                     commitBugs = random.randint(0,3)
                     
@@ -463,7 +453,7 @@ class SimProject:
             # If project is being planned
             if newState[KEY_STATUS] == STATUS_PLANNING:
                 # Add some arbitrary planning costs
-                newState[KEY_COST_TO_DATE] += random.randint(0,100) * intervalLen
+                newState[KEY_COST_TO_DATE] += random.randint(10,100) * intervalLen
 
                 # If planning is complete, move to development
                 if newState[KEY_DURATION] >= totalPlanningTime:
@@ -472,6 +462,8 @@ class SimProject:
             # Otherwise, if in development and the dev team contains at least one person
             elif newState[KEY_STATUS] == STATUS_DEVELOPING and len(newState[KEY_TEAM_RANKS]) > 0:
                 self.add_commits_and_bugs(newState, intervalLen)
+                newState[KEY_CODE_BUGS_RESOLUTION] = calc_ratio_safe(newState[KEY_CODE_BUGS_RESOLVED], newState[KEY_CODE_BUGS_TOTAL])
+
                 self.include_team_costs(newState, intervalLen)
                 self.include_unforeseen_costs(newState, intervalLen)
                 self.update_progress(newState, intervalLen)
@@ -492,8 +484,14 @@ class SimProject:
             if newState[KEY_DURATION] > dl or newState[KEY_COST_TO_DATE] > newState[KEY_BUDGET]:
                 newState[KEY_MET_SUPPORT] *= OVERRUN_SUPPORT_MULTIPLIER
 
+            # Calculate Total Cost as a fraction of the Budget 
             newState[KEY_BUDGET_ELAPSED] = calc_ratio_safe(newState[KEY_COST_TO_DATE], newState[KEY_BUDGET])
+            # Calculate Project Duration as a fraction of the Deadline
             newState[KEY_TIME_ELAPSED] = calc_ratio_safe(newState[KEY_DURATION], newState[KEY_OVERALL_DEADLINE])
+            # Calculate proportion of Expired Internal Deadlines which were Met
+            newState[KEY_SUBDEADLINES_MET_PROPORTION] = calc_ratio_safe(newState[KEY_NUM_SUBDEADLINE_MET], newState[KEY_NUM_SUBDEADLINE_EXPIRED])
+
+            # print(str(newState[KEY_NUM_SUBDEADLINE_MET]) + "/" + str(newState[KEY_NUM_SUBDEADLINE_EXPIRED]) + "=" + str(newState[KEY_SUBDEADLINES_MET_PROPORTION]))
 
             prevState = newState
             newStates.append(newState)
@@ -659,9 +657,13 @@ class SimProject:
 
 
     def get_labelled_samples(self, k):
+        headersToWrite = []
+        headersToWrite.append(KEY_ID)
+        headersToWrite.extend(independent_headers)
+
         # We can only take as many samples as there are states
         k = min(k, len(self.statesDf))
-        sampleDf = self.statesDf.sample(k)[independent_headers]
+        sampleDf = self.statesDf.sample(k, ignore_index=True)[headersToWrite]
 
         # Evaluate whether the project was a success, producing a score in range [0,1] for each component
         successReport = self.evaluate()
