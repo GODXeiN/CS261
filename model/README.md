@@ -67,4 +67,9 @@ Then, the Risk-Assessment class describes a single prediction provided by the Ri
         - generates a single project and inputs a single state from it into the model
         - displays the predicted result compared to the actual simulation of the project success
 
+
+# Description of Simulation
+Each simulated project is initialised with a randomly-generated Budget and Overall Deadline within the respective ranges provided to the constructor. A Project-Scale variable indicates the overall size of the project and is used when calculating the team size. Team Member experience ranks are generated independently and the average rank is maintained as separate column for look-up purposes. The constructor also generates a random-number of internal "mini" deadlines for the project and distributes at evenly-spaced intervals through the development timeframe (Start Date to Deadline). These deadlines act as Progress-Checks and throughout the project, will be monitored from an "Active" state (in the future and the expected progress not yet achieved), to an "Expired" state (either in the past or the required progress achieved ahead of time), and some will be considered "Met" (expired and achieved). Initial values for five soft metrics are generated randomly (at the moment, these values are fixed for the entirety of the simulation).
+
+
         

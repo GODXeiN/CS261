@@ -13,6 +13,8 @@ KEY_HARD_BUDGET = 'Hard Budget'
 KEY_COST_TO_DATE = 'Cost'
 KEY_DURATION = 'Duration'
 KEY_OVERALL_DEADLINE = 'Overall Deadline'
+KEY_BUDGET_ELAPSED = 'Budget Elapsed'                       # Float in range [0,1] representing Cost as a proportion of Budget
+KEY_TIME_ELAPSED = 'Time Elapsed'                           # Float in range [0,1] representing proportion of overall deadline which has passed
 # Internal project deadlines (effectively checkpoints)
 KEY_ACTIVE_SUBDEADLINES = 'Active Subdeadlines'             # List of deadlines which are upcoming
 KEY_NUM_SUBDEADLINE_TOTAL = 'Total Subdeadlines'            # Number of internal deadlines for the entire project
@@ -53,8 +55,28 @@ MAX_TEAM_SIZE = 6
 
 # Placeholders, will be replaced with actual values when appropriate
 softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
-                            KEY_MET_COMMITMENT: 4.0,
-                            KEY_MET_MORALE: 3.0 }
+                            KEY_MET_COMMITMENT: 5.0,
+                            KEY_MET_MORALE: 5.0 }
+
+
+# All column headers for the state dataframe
+metric_headers = [KEY_ID, 
+                  KEY_BUDGET, KEY_COST_TO_DATE, KEY_BUDGET_ELAPSED,
+                  KEY_OVERALL_DEADLINE, KEY_DURATION, KEY_TIME_ELAPSED, 
+                  KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET,
+                  KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
+                  KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
+                  KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
+                  KEY_STATUS, KEY_PROGRESS]
+
+
+# Columns which should be used as input for the prediction model 
+independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_BUDGET_ELAPSED, KEY_TIME_ELAPSED, 
+                        KEY_NUM_SUBDEADLINE_EXPIRED, KEY_NUM_SUBDEADLINE_MET,
+                        KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
+                        KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
+                        KEY_TEAM_AVG_RANK]
+
 
 
 # Given a project state, return the fraction of known bugs which have been resolved
@@ -110,23 +132,6 @@ def calc_ratio_safe(num, denom):
     return 0
 
 
-# All column headers for the state dataframe
-metric_headers = [KEY_ID,KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
-                  KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET,
-                  KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
-                  KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
-                  KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
-                  KEY_STATUS,KEY_PROGRESS]
-
-
-# Columns which should be used as input for the prediction model 
-independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_COST_TO_DATE, KEY_DURATION, 
-                        KEY_NUM_SUBDEADLINE_EXPIRED, KEY_NUM_SUBDEADLINE_MET,
-                        KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, 
-                        KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
-                        KEY_TEAM_AVG_RANK]
-
-
 
 # Represents a simulated Project
 class SimProject:
@@ -134,15 +139,23 @@ class SimProject:
 
     def add_initial_sub_deadlines(self, initRow):
         MAX_INIT_SUBDEADLINES = 20
-        initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * (0.95 * exponential(random.random(), 5, 1, 0) + 0.05))
+        # Controls the distribution of the number of subdeadlines
+        # (steeper gradient = fewer projects with more deadlines)
+        FREQUENCY_GRADIENT = 3
+        # Generate an exponentially distributed float [0,1]
+        subdeadlines_float = exponential(random.random(), FREQUENCY_GRADIENT, 1, 0)
+        initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * subdeadlines_float)
+
+        # print(initRow[KEY_NUM_SUBDEADLINE_TOTAL])
 
         startDate = 0
         endDate = initRow[KEY_OVERALL_DEADLINE]
-        projectLength = endDate - startDate
+        projectDuration = endDate - startDate
         subdeadlines = []
 
         # Equally space deadline within the project's timeframe
-        intervalBetweenDeadlines = int((endDate - startDate) / (initRow[KEY_NUM_SUBDEADLINE_TOTAL] + 1))
+        # The number of gaps is one more than the number of deadlines
+        intervalBetweenDeadlines = int(projectDuration / (initRow[KEY_NUM_SUBDEADLINE_TOTAL] + 1))
 
         # We want some randomness in the deadline dates, but we need to ensure they balance out over the entire project
         # Therefore, we keep the last "extension" amount and use it to shrink the next deadline
@@ -156,7 +169,7 @@ class SimProject:
                 dlDay -= lastRandomExtensionAmt
                 lastRandomExtensionAmt = 0
             else:
-                lastRandomExtensionAmt = random.randint(0, int(projectLength / 20))
+                lastRandomExtensionAmt = random.randint(0, int(projectDuration / 20))
                 dlDay += lastRandomExtensionAmt
 
             expectedProgress = dlDay / endDate
@@ -191,6 +204,7 @@ class SimProject:
         teamRanks = []
         teamSize = int(random.randint(1, MAX_TEAM_SIZE * 10 * projectScale))
         totalRank = 0
+        # Generate the ranks for the team members arbitrarily (and keep a running sum to calculate the average)
         for i in range(0, teamSize):
             rank = random.randint(1,5)
             teamRanks.append(rank)
@@ -203,7 +217,7 @@ class SimProject:
         self.add_initial_sub_deadlines(initRow)
 
         # Initialise soft metrics randomly
-        initRow[KEY_MET_COMMUNICATION] = (round(avgRank, 2) + rand_metric_value()) / 2
+        initRow[KEY_MET_COMMUNICATION] = rand_metric_value()
         initRow[KEY_MET_PLANNING] = rand_metric_value()
         initRow[KEY_MET_COMMITMENT] = rand_metric_value()
         initRow[KEY_MET_SUPPORT] = rand_metric_value()
@@ -217,8 +231,8 @@ class SimProject:
     def make_state(self, status):
         state = {
                     KEY_ID:self.projectID,
-                    KEY_BUDGET:0, KEY_OVERALL_DEADLINE:0,
-                    KEY_COST_TO_DATE:0, KEY_DURATION:0, 
+                    KEY_BUDGET:0, KEY_COST_TO_DATE:0, KEY_BUDGET_ELAPSED:0,
+                    KEY_OVERALL_DEADLINE:0, KEY_DURATION:0, KEY_TIME_ELAPSED:0,
                     KEY_NUM_SUBDEADLINE_TOTAL:0, KEY_NUM_SUBDEADLINE_MET:0,
                     KEY_ACTIVE_SUBDEADLINES:[], KEY_NUM_SUBDEADLINE_EXPIRED:0,
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0,
@@ -408,7 +422,7 @@ class SimProject:
         # A well-planned project is less likely to encounter additional costs (but still can do so)
 
         # Calculate the probability of incurring costs (between 0.05 and 0.5)
-        probIncurCosts = 0.5 * exponential(planning, -2, 0, 0.1)
+        probIncurCosts = 0.5 * exponential(planning, -1, 0, 0.1)
 
         maxCost = 10000     # Maximum possible cost
         baseCost = 0.01     # Minimum possible cost, as a proportion of the maximum cost
@@ -418,8 +432,8 @@ class SimProject:
         for i in range(0, intervalLen):
             if random.random() < probIncurCosts:
                 x = random.random()
-                # Calculate the cost, rounding to ensure integer value
-                unforeseenCost = int(maxCost * (exponential(x-1, costK, 0, baseCost)))
+                # Generate an exponentially-distributed cost, rounding to ensure integer value
+                unforeseenCost = int(maxCost * (exponential(x, costK, 1, baseCost)))
                 state[KEY_COST_TO_DATE] += unforeseenCost
 
 
@@ -449,7 +463,7 @@ class SimProject:
             # If project is being planned
             if newState[KEY_STATUS] == STATUS_PLANNING:
                 # Add some arbitrary planning costs
-                newState[KEY_COST_TO_DATE] = random.randint(0,500) * intervalLen
+                newState[KEY_COST_TO_DATE] += random.randint(0,100) * intervalLen
 
                 # If planning is complete, move to development
                 if newState[KEY_DURATION] >= totalPlanningTime:
@@ -477,6 +491,9 @@ class SimProject:
             # Every week the project overruns, the support of the executives decreases
             if newState[KEY_DURATION] > dl or newState[KEY_COST_TO_DATE] > newState[KEY_BUDGET]:
                 newState[KEY_MET_SUPPORT] *= OVERRUN_SUPPORT_MULTIPLIER
+
+            newState[KEY_BUDGET_ELAPSED] = calc_ratio_safe(newState[KEY_COST_TO_DATE], newState[KEY_BUDGET])
+            newState[KEY_TIME_ELAPSED] = calc_ratio_safe(newState[KEY_DURATION], newState[KEY_OVERALL_DEADLINE])
 
             prevState = newState
             newStates.append(newState)
