@@ -1,0 +1,12 @@
+.navbar-expand-md .navbar-nav .nav-link {
+    padding-right: initial;
+}
+.brand {
+    position: absolute;
+    left: 50%;
+    margin-left: -65px !important;  /* 50% of your logo width */
+    display: block;
+}
+.titlef {
+    font-size: 5vw;
+}
