@@ -9,6 +9,7 @@ views = Blueprint('views', __name__)
 @views.route('/home')
 @login_required
 def home():
+
     return render_template("home.html", user=current_user)
 
 @views.route('/create_project', methods=['GET','POST'])
@@ -45,4 +46,18 @@ def create_project():
 @views.route('/view')
 @login_required
 def view():
-    return render_template("view.html", user=current_user)
+    finished = []
+    ongoing = []
+    projects = Project.query.filter_by(managerID = current_user.managerID).all()
+    for entry in projects:
+        hmetrics = Hard_Metrics.query.filter_by(projectID = entry.projectID).last()
+        if hmetrics.status is 0:
+            ongoing.insert(entry,hmetrics)
+        else:
+            finished.insert(entry,hmetrics)
+    return render_template("view.html", user=current_user, finished=finished, ongoing=ongoing)
+
+@views.route('/faq')
+@login_required
+def faq():
+    return render_template("faq.html")
