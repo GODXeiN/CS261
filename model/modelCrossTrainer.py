@@ -44,7 +44,10 @@ if not isdir(TRAINED_MODEL_DIR):
 
 # Identify the groups (projects) from which each sample belongs
 projectGroups = np.array(df[KEY_ID])
-gkf = GroupKFold(n_splits=10)
+gkf = GroupKFold(n_splits=5)
+
+
+
 
 def train_model_and_dump(independent_headers, dependent_header, model_save_dest, model_accuracy_dest):
 
@@ -52,13 +55,13 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
     x = np.array(df[independent_headers])
     y = np.array(df[dependent_header])
 
-    # Sequence a scaler and the model, so any input data is normalised before being fed to the model
-
+    # Store the trained model with the most accurate performance
     bestEstimator = None
     bestScore = 0
-    # Split the imported data into training and test components
-    # Stratify ensures that the proportion of each class is maintained
+    
+    # Train the model on each data split, retaining the configuration with the most accuracy
     for train, test in gkf.split(x, y, groups=projectGroups):
+        # Sequence a scaler and the model, so any input data is normalised before being fed to the model
         pipeLR = Pipeline([('scaler', StandardScaler()), ('logreg', LogisticRegression())])
         
         x_train = x[train]
@@ -67,11 +70,14 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
         y_test = y[test]
 
         pipeLR.fit(x_train, y_train)
-        score = pipeLR.score(x_test, y_test)
-        if score > bestScore:
-            bestEstimator = pipeLR
+        modelScore = pipeLR.score(x_test, y_test)
 
-        print("Score:", str(pipeLR.score(x_test, y_test)))
+        # Only retain the model which exhibits the highest score (most accurate)
+        if modelScore > bestScore:
+            bestEstimator = pipeLR
+            bestScore = modelScore
+
+        print("Score:", str(modelScore))
     
     # y_pred = bestEstimator.predict(x_test)
 
@@ -87,12 +93,10 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
 
     # Evaluate the model's accuracy by comparing the prediction to the actual test y-values
     # print(classification_report(y_test, y_pred))
-    # modelAccuracy = accuracy_score(y_test, y_pred)
-    # print(" >>> Accuracy:", str(modelAccuracy))
 
-    # accuracyFile = open(model_accuracy_dest, "w")
-    # accuracyFile.write(str(modelAccuracy))
-    # accuracyFile.close() 
+    accuracyFile = open(model_accuracy_dest, "w")
+    accuracyFile.write(str(bestScore))
+    accuracyFile.close() 
 
     # # Export the trained model for use by the Risk-Assessment system
     dump(bestEstimator, model_save_dest)

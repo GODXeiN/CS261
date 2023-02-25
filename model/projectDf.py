@@ -69,9 +69,9 @@ MAX_TEAM_SIZE = 6
 
 
 # Placeholders, will be replaced with actual values when appropriate
-softMetricCoefficients = { KEY_MET_COMMUNICATION: 5.0,
-                            KEY_MET_COMMITMENT: 5.0,
-                            KEY_MET_MORALE: 5.0 }
+softMetricCoefficients = { KEY_MET_COMMUNICATION: 1.0,
+                            KEY_MET_COMMITMENT: 1.5,
+                            KEY_MET_MORALE: 2.0 }
 
 
 # All column headers for the state dataframe
@@ -316,7 +316,7 @@ class SimProject:
             timeToAddBugs = int(20 * exponential(dedication, -1, 0, 0))
             for i in range(0, timeToAddBugs):
                 if random.random() < bugLikelihood:
-                    commitBugs = random.randint(0,3)
+                    commitBugs = random.randint(1,10)
                     
             newBugs += commitBugs
             # Fix some number of bugs
@@ -346,15 +346,16 @@ class SimProject:
 
         avgMetric = (comm + planning + morale) / 15
 
-        delta = duration * (avgMetric * teamsize / 200) * (0.8 + 0.4 * random.random())
+        delta = duration * (avgMetric * teamsize / 100) * (0.8 + 0.4 * random.random())
 
         # If any progress has been made on the project
         if state[KEY_PROGRESS] > 0:
             # Then, there is a chance that the team will lose progress (maybe due to a problem)
             if random.random() < self.get_neg_progress_chance(state):
                 # Proportion of progress which is reversed (Square-Law to reduce effect)
-                negProgress = pow(random.random(),2)
+                negProgress = pow(random.random() / 2, 2)
                 delta = -negProgress * state[KEY_PROGRESS]
+                # print("Negative Progress:", str(delta))
         
         # Update the progress, ensuring new value is no greater than 1
         state[KEY_PROGRESS] = min(1, state[KEY_PROGRESS] + delta)
@@ -412,11 +413,12 @@ class SimProject:
         # A well-planned project is less likely to encounter additional costs (but still can do so)
 
         # Calculate the probability of incurring costs (between 0.05 and 0.5)
-        probIncurCosts = 0.5 * exponential(planning, -1, 0, 0.1)
+        probIncurCosts = 0.1 * exponential(planning, -1, 0, 0.05)
 
-        maxCost = 10000     # Maximum possible cost
-        baseCost = 0.01     # Minimum possible cost, as a proportion of the maximum cost
-        costK = 3           # Steepness of exponential cost function 
+        maxCost = 5000     # Maximum possible cost
+        baseCost = 0.01    # Minimum possible cost, as a proportion of the maximum cost
+
+        costK = 5          # Steepness of exponential cost function 
 
         # Every day, the project has a 1% chance to encounter additional costs
         for i in range(0, intervalLen):
@@ -424,6 +426,7 @@ class SimProject:
                 x = random.random()
                 # Generate an exponentially-distributed cost, rounding to ensure integer value
                 unforeseenCost = int(maxCost * (exponential(x, costK, 1, baseCost)))
+                # print("Unforeseen Cost:", str(unforeseenCost))
                 state[KEY_COST_TO_DATE] += unforeseenCost
 
 

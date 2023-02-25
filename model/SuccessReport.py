@@ -9,11 +9,11 @@ KEY_OVERALL = 'Overall'
 
 # Weightings of each factor when calculating the overall success
 success_coefficients = {
-    KEY_FINANCE: 3.0,
-    KEY_TIMESCALE: 3.0,
+    KEY_FINANCE: 5.0,
+    KEY_TIMESCALE: 5.0,
     KEY_MANAGEMENT: 1.0,
-    KEY_CODE: 2.0,
-    KEY_TEAM: 3.0
+    KEY_CODE: 2.5,
+    KEY_TEAM: 2.0
 }
 
 class SuccessReport:
@@ -60,7 +60,10 @@ class SuccessReport:
         binSuccesses = {}
 
         for (key, success) in self.successValues.items():
-            binSuccesses[key] = int(round(success,0))
+            if success > 0.6:
+                binSuccesses[key] = 1
+            else:
+                binSuccesses[key] = 0
 
         return binSuccesses
 

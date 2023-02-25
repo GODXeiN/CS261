@@ -11,7 +11,7 @@ rag = RiskAssessmentGenerator.RiskAssessmentGenerator()
 print("Single Testing Model\n")
 
 # Creates an arbitrary project
-p = SimProject(10001, 4, 30, 10000, 200, 1000)
+p = SimProject(10001, 10, 30, 10000, 200, 500)
 p.simulate()
 successRep = p.evaluate()
 print(str(successRep))
@@ -19,18 +19,12 @@ print(str(successRep))
 # Get a single sample from the project
 pSample = p.get_labelled_samples(1).iloc[0]
 
-# Convert the data point from a row to a vector for input into the models
-proj_x = pSample[independent_headers].to_numpy().reshape(1,-1)
-
 # print("Artificial Project: ")
 # print(str(pSample))
 
 # Generate the Risk-Assessment and display it
-ra = rag.generate_ra(proj_x)
+ra = rag.generate_ra(pSample)
 print(ra)
-
-
-#### Old approach for a single model
 
 # Get the prediction 
 # p_pred = pipeLR.predict(proj_x)
