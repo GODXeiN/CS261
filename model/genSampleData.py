@@ -12,8 +12,9 @@ MODE_GEN_TEST = 1
 FILE_TRAIN = "./data/trainDataStaged.csv" 
 FILE_TEST = "./data/testDataStaged.csv"
 
+
 # Callable function to generate sample projects and write to the corresponding output file
-def generate_sample_data(mode, num_projects, samples_per_project, budget, deadline):
+def generate_sample_data(mode, num_projects, samples_per_project, budget, deadline, startID):
     # Determine ranges for the budget and deadline of generated projects
     (budgetMin, budgetMax, budgetUnit) = budget
     (deadlineMin, deadlineMax) = deadline
@@ -59,14 +60,18 @@ def generate_sample_data(mode, num_projects, samples_per_project, budget, deadli
 
     csvToWrite = []
 
+    # If we're starting from project ID 0, then we overwrite the contents of the target directory
+    # Otherwise, we just append the new projects to the end of the file
+    overwriteFileContents = (startID == 0)
+
     for i in range(0, num_projects):
-        p = SimProject(i,budgetMin, budgetMax, budgetUnit, deadlineMin, deadlineMax)
+        p = SimProject(startID + i, budgetMin, budgetMax, budgetUnit, deadlineMin, deadlineMax)
 
         # Simulate the project's development till either complete or cancelled
         p.simulate()
         # print(str(p))
         # print("-----")
-
+        
         # Add each success value as a new column in the dataframe
         sampleDf = p.get_labelled_samples(samples_per_project)
 
@@ -98,23 +103,33 @@ def generate_sample_data(mode, num_projects, samples_per_project, budget, deadli
             progressFrac = str(i) + "/" + str(num_projects)
             print(" >>>", progressFrac, "(" + str(100 * i / num_projects) + "%)")
         
-        csvToWrite.append(sampleDf.to_csv(header=(i==0), lineterminator='\n'))
+        # Convert the samples to CSV format and store in the list to be written out after the generation
+        if overwriteFileContents:
+            # If we're starting a new file, add the CSV column headers
+            csvToWrite.append(sampleDf.to_csv(header=(i==0), lineterminator='\n'))
+        else:
+            csvToWrite.append(sampleDf.to_csv(lineterminator='\n', header=False))
+
     print(" >>> 100.0%")
 
     # Display a summary after generation
-    print("\nGenerated", num_projects, "projects, producing", totalSamples, "samples")
+    print("Generated", num_projects, "projects, producing", totalSamples, "samples")
     print(" >>> Successes:", str(numSuccesses) + "; Failures:", str(numFailures))
-    # print(" >>> Cancellations:", str(numCancellations))
-
     print(" >>> Finance Successes:", str(numFinanceSuccess) + "/" + str(num_projects))
     print(" >>> Timescale Successes:", str(numTimescaleSuccess) + "/" + str(num_projects))
     print(" >>> Code Successes:", str(numCodeSuccess) + "/" + str(num_projects))
     print(" >>> Management Successes:", str(numManagementSuccess) + "/" + str(num_projects))
     print(" >>> Team Successes:", str(numTeamSuccess) + "/" + str(num_projects))
 
-    print("\nWriting to CSV...")
+    # Describes how data-file should be opened for writing (a=append) 
+    openMode = 'a'
+    # If we're writing the first entry to the file, replace its contents
+    if overwriteFileContents:
+        openMode = 'w'        
+
+    print("Writing to CSV...")
     # Write the given samples to the file
-    destFile = open(destFilename, 'w')
+    destFile = open(destFilename, openMode)
     for data in csvToWrite:
         destFile.write(data)
     destFile.close()

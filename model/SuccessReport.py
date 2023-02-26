@@ -16,6 +16,16 @@ success_coefficients = {
     KEY_TEAM: 2.0
 }
 
+# Minimum success value required for the component to be considered a success
+binary_thresholds = {
+    KEY_FINANCE: 0.5,
+    KEY_TIMESCALE: 0.5,
+    KEY_MANAGEMENT: 0.6,
+    KEY_CODE: 0.8,
+    KEY_TEAM: 0.6,
+    KEY_OVERALL: 0.6
+}
+
 class SuccessReport:
 
     def __init__(self):
@@ -54,13 +64,14 @@ class SuccessReport:
         return None
 
 
-    # Convert each success value into 1 (if value >= 0.5), or 0 (if value < 0.5)
+    # Convert each success value into 1 (if value >= threshold), or 0 (if value < threshold)
     # and return the dictionary of the binarized values.
+    # Each component has an individual threshold value defined in the binary_thresholds dict.
     def get_binary_successes(self):
         binSuccesses = {}
 
         for (key, success) in self.successValues.items():
-            if success > 0.6:
+            if success >= binary_thresholds[key]:
                 binSuccesses[key] = 1
             else:
                 binSuccesses[key] = 0

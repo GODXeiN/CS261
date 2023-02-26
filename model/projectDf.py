@@ -64,9 +64,21 @@ STATUS_CANCELLED = -1
 
 # When a project passes its deadline/budget, management support decreases each week
 OVERRUN_SUPPORT_MULTIPLIER = 0.999
+# The cost of a single day's work from a developer with Rank 1. 
+# Note: the cost scales proportional to the rank
+# e.g. a Rank 2 dev costs: 2 * 150/day = 300/day
+#      a Rank 5 dev costs: 5 * 150/day = 750/day 
 COST_PER_DEV_RANK_DAY = 150
-MAX_TEAM_SIZE = 6
-
+# Maximum size of the team for a project of scale 1/10
+TEAM_UNIT_SIZE = 6
+# Maximum number of internal deadlines generated at the start of a project
+MAX_INIT_SUBDEADLINES = 20
+# Maximum number of times the project may overrun its deadline before it is cancelled
+# This value helps to ensure projects are terminated
+# e.g. if the project has an Overall Deadline of 100 days and MAX_TIMES_DEADLINE_ELAPSED = 3, 
+#           then the project will be cancelled at day 301
+MAX_TIMES_DEADLINE_ELAPSED = 3
+MAX_BUGS_PER_COMMIT = 20
 
 # Placeholders, will be replaced with actual values when appropriate
 softMetricCoefficients = { KEY_MET_COMMUNICATION: 1.0,
@@ -81,7 +93,7 @@ metric_headers = [KEY_ID,
                   KEY_NUM_SUBDEADLINE_TOTAL, KEY_NUM_SUBDEADLINE_MET, KEY_SUBDEADLINES_MET_PROPORTION,
                   KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLVED, KEY_CODE_BUGS_TOTAL, KEY_CODE_BUGS_RESOLUTION ,
                   KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
-                  KEY_TEAM_RANKS,KEY_TEAM_AVG_RANK, 
+                  KEY_TEAM_RANKS, KEY_TEAM_AVG_RANK, KEY_TEAM_SIZE, 
                   KEY_STATUS, KEY_PROGRESS]
 
 
@@ -90,7 +102,7 @@ independent_headers = [KEY_BUDGET, KEY_OVERALL_DEADLINE, KEY_BUDGET_ELAPSED, KEY
                         KEY_SUBDEADLINES_MET_PROPORTION,
                         KEY_CODE_COMMITS, KEY_CODE_BUGS_RESOLUTION, 
                         KEY_MET_COMMUNICATION, KEY_MET_COMMITMENT, KEY_MET_MORALE, KEY_MET_PLANNING, KEY_MET_SUPPORT,
-                        KEY_TEAM_AVG_RANK]
+                        KEY_TEAM_AVG_RANK, KEY_TEAM_SIZE]
 
 
 
@@ -130,7 +142,6 @@ class SimProject:
     rand = random
 
     def add_initial_sub_deadlines(self, initRow):
-        MAX_INIT_SUBDEADLINES = 20
         # Controls the distribution of the number of subdeadlines
         # (steeper gradient = fewer projects with more deadlines)
         FREQUENCY_GRADIENT = 3
@@ -178,7 +189,7 @@ class SimProject:
 
         self.projectID = pid
 
-        # Determines complexity and scale of the project (influencing team + budget)
+        # Determines complexity and scale of the project
         projectScale = random.randint(1,10) / 10.0
 
         softBdgt = self.generate_budget(minBudget, maxBudget, unitBudget, projectScale)
@@ -191,10 +202,15 @@ class SimProject:
         initRow[KEY_COST_TO_DATE] = 0
         initRow[KEY_DURATION] = 0
 
+       
+        max_team_size = TEAM_UNIT_SIZE * 10 * projectScale
+
         # Generate the development ranks for a random team
         # A larger project is permitted to have a larger dev team (but not required to)
         teamRanks = []
-        teamSize = int(random.randint(1, MAX_TEAM_SIZE * 10 * projectScale))
+        # Exponentially-distributed team sizes (+1 to ensure at least one team member)
+        teamSize = int(round(max_team_size * exponential(random.random(), 3, 1, 0))) + 1
+        # print(teamSize)
         totalRank = 0
         # Generate the ranks for the team members arbitrarily (and keep a running sum to calculate the average)
         for i in range(0, teamSize):
@@ -205,6 +221,7 @@ class SimProject:
         avgRank = totalRank / teamSize
         initRow[KEY_TEAM_AVG_RANK] = avgRank
         initRow[KEY_TEAM_RANKS] = teamRanks
+        initRow[KEY_TEAM_SIZE] = teamSize
 
         self.add_initial_sub_deadlines(initRow)
 
@@ -229,7 +246,7 @@ class SimProject:
                     KEY_ACTIVE_SUBDEADLINES:[], KEY_NUM_SUBDEADLINE_EXPIRED:0,
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0, KEY_CODE_BUGS_RESOLUTION:0.0,
                     KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
-                    KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0,
+                    KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0, KEY_TEAM_SIZE:0,
                     KEY_PROGRESS: 0,
                     KEY_STATUS: status
                 }
@@ -299,35 +316,53 @@ class SimProject:
         # Get the number of unresolved bugs in the codebase
         existingBugs = state[KEY_CODE_BUGS_TOTAL] - state[KEY_CODE_BUGS_RESOLVED]
 
+        morale = state[KEY_MET_MORALE]
+
+        # Consider each member of the team in-turn
         for experience in devTeam:
-            newDevCommits = random.randint(0, int(state[KEY_MET_MORALE]) * intervalLen)
-            newCommits += newDevCommits
-            # Calculate the chance of a developer not fixing a bug, based on their experience
-            # e.g.
-            #   Rank=0 means 75% chance of creating a bug; 
-            #   Rank=5 means 30% chance of creating a bug
+            # Maximum possible commits per day for each development member 
+            # is based on the commitment of the team to the project with some randomness
+            MAX_POSSIBLE_COMMITS = int(state[KEY_MET_COMMITMENT] * 0.75) + random.randint(0,2)
 
-            # Get estimate of team dedication (0-1)
-            dedication = (experience + state[KEY_MET_COMMITMENT]) / (2 * SOFT_METRIC_MAX)
-            bugLikelihood = 0.75 * exponential(dedication, 1, 0, 0)
+            # For each day in the elapsed interval
+            for d in range (0, intervalLen):
+                effort = (0.75 * (morale / SOFT_METRIC_MAX) + 0.25 * random.random())
+                # Generate a number of new commits based on the morale of the developer
+                newDevCommits = int(round(MAX_POSSIBLE_COMMITS * exponential(effort, 2, 1, 0))) + 1
+                # print(newDevCommits)
 
-            # Include some random number of bugs
-            commitBugs = 0
-            timeToAddBugs = int(20 * exponential(dedication, -1, 0, 0))
-            for i in range(0, timeToAddBugs):
-                if random.random() < bugLikelihood:
-                    commitBugs = random.randint(1,10)
-                    
-            newBugs += commitBugs
-            # Fix some number of bugs
-            commitResolvedBugs = random.randint(0, commitBugs)
-            # Bugs which already exist in the code may be solved
-            if existingBugs > 0:
-                existingResolvedBugs = random.randint(0, existingBugs)
-                existingBugs -= existingResolvedBugs
-                newResolvedBugs += existingResolvedBugs
+                # print("New Commits: ", newDevCommits)
+                newCommits += newDevCommits
 
-            newResolvedBugs += commitResolvedBugs
+                # Each commit has bugs but some of these may be solved by the developer.
+                # Now, we calculate the chance of a developer not fixing a bug, 
+                #   inversely related to their experience e.g.
+                #       a Rank-0 dev has a 75% chance of introducing a bug; 
+                #       a Rank-5 dev has a 30% chance of introducing a bug
+
+                # Get estimate of team member reliability (0-1), which is assumed to be 
+                # inversely related to the likelihood of bug creation
+                reliability = (experience + state[KEY_MET_COMMITMENT]) / (2 * SOFT_METRIC_MAX)
+                bugLikelihood = 0.75 * exponential(reliability, -1, 0, 0)
+
+                # Generate some random number of bugs
+                commitBugs = 0
+                for i in range(0, newDevCommits):
+                    if random.random() < bugLikelihood:
+                        commitBugs += int(MAX_BUGS_PER_COMMIT * exponential(random.random(), 2, 1, 0))
+                        
+                newBugs += commitBugs
+                # print("Bugs:",commitBugs)
+
+                # Fix some number of bugs
+                commitResolvedBugs = random.randint(0, commitBugs)
+                # Bugs which already exist in the code may be solved
+                if existingBugs > 0:
+                    existingResolvedBugs = random.randint(0, existingBugs)
+                    existingBugs -= existingResolvedBugs
+                    newResolvedBugs += existingResolvedBugs
+
+                newResolvedBugs += commitResolvedBugs
 
         state[KEY_CODE_COMMITS] += newCommits
         state[KEY_CODE_BUGS_TOTAL] += newBugs
@@ -341,8 +376,8 @@ class SimProject:
         planning = state[KEY_MET_PLANNING]
         morale = state[KEY_MET_MORALE]
 
-        # Apply log to reduce effect of large teams on progress
-        teamsize = int(math.log(len(state[KEY_TEAM_RANKS])+1))
+        # Apply log to limit the effect of large teams on the progress
+        teamsize = int(math.log(state[KEY_TEAM_SIZE]+1))
 
         avgMetric = (comm + planning + morale) / 15
 
@@ -479,7 +514,9 @@ class SimProject:
                 self.checkForExpiredDeadlines(newState)
 
             cancellation_chance = self.get_cancellation_chance(newState)
-            if random.random() < cancellation_chance:
+            # If the project is chosen by the management to be cancelled 
+            # or it has significantly overrun its original deadline, then it is cancelled and the simulation stopped
+            if random.random() < cancellation_chance or newState[KEY_TIME_ELAPSED] >= MAX_TIMES_DEADLINE_ELAPSED:
                 newState[KEY_STATUS] = STATUS_CANCELLED
                 stopSim = True
 
@@ -549,16 +586,45 @@ class SimProject:
 
     # Metrics Used: Budget; CostToDate
     def eval_finance(self, state):
-        bdgtRatio = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST_TO_DATE])
-        return sigmoid_func(bdgtRatio)
+        # surplusCost = state[KEY_COST_TO_DATE] - state[KEY_BUDGET]  
+        # print("Budget:", state[KEY_BUDGET])
+        # print("Cost:", state[KEY_COST_TO_DATE])
+        # print("Surplus:",str(surplusCost))
+        
+        # # If project costs total to more than budget, then the project overspent
+        # if surplusCost > 0:
+        #     # Calculate the overspending as a proportion of the initial budget [0,infinity]
+        #     ospendFactor = calc_ratio_safe(surplusCost, state[KEY_BUDGET])
+        #     # print("Overspending by ", str(round(ospendFactor,2)) + " of budget")
+        #     # Apply exponential decay to the evaluation to return a value in the range [0,0.5]
+        #     eval = 0.5 * exponential(ospendFactor, -1, 0, 0)
+        #     # print("Overspending Eval:", str(eval))
+        #     return eval
+        # # Otherwise, project is on/under budget
+        # else:
+        #     # Calculate the savings as a proportion of the budget (i.e. a value in the range [0,1])
+        #     # Note: since -cost <= budget, we have a max factor of 1
+        #     uspendFactor = calc_ratio_safe(-surplusCost, state[KEY_BUDGET])
+        #     print("Underspending by ", str(round(uspendFactor,2)) + " of budget")
+        #     # Apply Sigmoid Function 
+        #     eval = sigmoid_func(uspendFactor, -5, 0)
+        #     print("Underspending Eval:", str(eval))
+        #     return eval
+        
+        # Calculate a measure of spending, a value in range [0, infinity]
+        # If the project is on-budget, then this value is 1
+        # If the project is under-budget, then this value is >1
+        # If the project is over-budget, then this value is in range [0,1)
+        spendingFactor = calc_ratio_safe(state[KEY_BUDGET], state[KEY_COST_TO_DATE])
+        # Apply a flipped sigmoid function to produce an evaluation in the range [0,1]
+        # Higher inputs (under-budget) produce a higher output (more success); 
+        # Inputting 1 yields 0.5 (neutral success)
+        return sigmoid_func(spendingFactor, -5, 1)
 
     # Metrics Used: Deadline; Duration
     def eval_time(self, state):
-        overallDlratio = calc_ratio_safe(state[KEY_OVERALL_DEADLINE], state[KEY_DURATION])
-        return sigmoid_func(overallDlratio)
-        # Proportion of deadlines which have passed which have been met
-        # subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
-        # return (sigmoid_func(overallDlratio) + subDlRatio) / 2
+        timeFactor = calc_ratio_safe(state[KEY_OVERALL_DEADLINE], state[KEY_DURATION])
+        return sigmoid_func(timeFactor, -5, 0)
 
     # Metrics Used: Top-Level Management Support; Project Planning
     def eval_management(self, state):
@@ -569,8 +635,8 @@ class SimProject:
     # Metrics Used: CommitFrequency; ResolvedBugs; TotalBugs
     def eval_code(self, state):
         # Get an estimate for project activity by considering commit frequency 
-        # before and after the last 30 days
-        activityRatio = sigmoid_func(self.get_activity_ratio(30))
+        # before and after the last 30 days. Apply Sigmoid to restrict to the range [0,1]
+        activityRatio = sigmoid_func(self.get_activity_ratio(30), -5, 1)
         # print("Activity Ratio:", str(activityRatio))
         # Consider the proportion of *known* bugs which have been resolved
         resolvedBugRatio = calc_proportion_bugs_resolved(state)

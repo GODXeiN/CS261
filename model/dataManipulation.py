@@ -1,14 +1,23 @@
-# Shared Library providing common Data Manipulation functions used by multiple modules
+
+# Shared Library providing common Data Manipulation functions used by multiple modules.
+# These functions are generic and aimed at standardising data or restricting it to a certain range.
  
 import math
 
 
 # Logistic function to compress values into the range [0,1]
-def sigmoid_func(x):
-    k = 5       # Steepness
-    x_0 = 1     # Centered around 1
-    exp = math.exp(-k*(x-x_0))
-    return 1 / (1+exp)
+# k influences steepness of curve (larger is more steep)
+# x_0 influences the centering (i.e. the midpoint of the curve)
+def sigmoid_func(x, k, x_0):
+    # If x is big or small, then we avoid overflow by setting the result
+    if (x-x_0) > 10:
+        return 1
+    if (x-x_0) < -10:
+        return 0
+
+    exp = math.exp(k*(x-x_0))
+    return 1 / (1+exp)        
+
 
 
 # Convenience method for generating exponentially-distributed values for a given set of parameters/coefficients

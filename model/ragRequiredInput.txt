@@ -15,3 +15,4 @@ RAG.generate_ra() takes as input a project state (Pandas Series) which contains 
     * 'Project Planning'                - FLOAT in [1,5] (soft metric)
     * 'Top-Level Management Support'    - FLOAT in [1,5] (soft metric)
     * 'Average Team Experience'         - FLOAT in [1,5]; the mean of the experience rank for all team members
+    * 'Team Size'                       - INTEGER, the number of project dev. team members

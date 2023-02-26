@@ -44,7 +44,7 @@ if not isdir(TRAINED_MODEL_DIR):
 
 # Identify the groups (projects) from which each sample belongs
 projectGroups = np.array(df[KEY_ID])
-gkf = GroupKFold(n_splits=5)
+gkf = GroupKFold(n_splits=10)
 
 
 
@@ -64,10 +64,15 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
         # Sequence a scaler and the model, so any input data is normalised before being fed to the model
         pipeLR = Pipeline([('scaler', StandardScaler()), ('logreg', LogisticRegression())])
         
+
         x_train = x[train]
         y_train = y[train]
         x_test = x[test]
         y_test = y[test]
+
+        # print(train)
+        # print(test)
+        # print(x_train)
 
         pipeLR.fit(x_train, y_train)
         modelScore = pipeLR.score(x_test, y_test)
@@ -77,7 +82,7 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
             bestEstimator = pipeLR
             bestScore = modelScore
 
-        print("Score:", str(modelScore))
+    print("Best Score:", str(bestScore))
     
     # y_pred = bestEstimator.predict(x_test)
 
