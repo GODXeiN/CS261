@@ -1,0 +1,49 @@
+table, th, td{
+    border: solid;
+}
+
+.table_div{
+    width:30%;
+    height: 50%;
+    margin: 10% 0 0 65%;
+
+
+}
+
+#container2{
+    padding-bottom: 10%;
+
+    float: left;
+    margin: 10% 0 0 0;
+
+    width: 40%;
+    
+}
+
+.brand{
+    position: absolute;
+    left: 50%;
+    margin-left: -200px !important;  /* 50% of your logo width */
+    display: block;
+}
+
+body{
+    background-color: #E8F0FE;
+}
+
+.labels{
+    font-size: 4vh;
+}
+
+
+#container1{
+    float: left;
+    margin: 10% 0 0 7%;
+
+    width: 15%;
+}
+
+.confirm>button:hover{
+    background-color:  #97cba9;
+    border-color:  #97cba9;
+}

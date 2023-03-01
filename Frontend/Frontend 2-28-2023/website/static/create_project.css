@@ -1,0 +1,65 @@
+.container2{
+    position: relative;
+    margin: 0 auto;
+    background: #febe7e;
+    padding-top: 10%;
+    padding-bottom: 10%;
+    width: 125%;
+    padding-left: 10%;
+    border-radius: 2vh;
+    text-align: center;
+    padding-top: -50%;
+
+
+}
+
+.text_div{
+    position: relative;
+    right: 5%;
+    text-align: center;
+}
+.form-check-input{
+    left: 20%;
+}
+
+.h2{
+    margin: auto;
+}
+.mb-3{
+    width: 20rem;
+}
+
+.labels{
+    text-align: left;
+}
+
+.text_div>a{
+    position: relative;
+    color: #183153; 
+
+    display: inline-block;
+    left: 43%;
+    top: -8vh;
+}
+.text_div>a:hover{
+    color: #183153; 
+}
+.text_div>a:visited{
+    color: #183153; 
+}
+
+.confirm>button{
+    background-color: #ec7263;
+    border-color: #ec7263;
+    
+}
+
+.confirm>button:hover{
+    background-color: #a75265;
+    border-color: #a75265;
+}
+
+.url_div{
+    position: relative;
+    bottom: 2.2vh;
+}
