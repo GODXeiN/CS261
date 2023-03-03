@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from os.path import isdir
@@ -5,14 +6,15 @@ from os import makedirs
 
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, accuracy_score, mean_squared_error
+from sklearn.metrics import classification_report, accuracy_score, mean_squared_error, confusion_matrix
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GroupKFold
+from sklearn.metrics import PrecisionRecallDisplay
 
 from projectDf import independent_headers, KEY_ID
 from joblib import dump
-from logregTrainer import TRAINED_MODEL_DIR, OVERALL_MODEL_SAVE_DEST, FINANCE_MODEL_SAVE_DEST, TIMESCALE_MODEL_SAVE_DEST, CODE_MODEL_SAVE_DEST, MANAGEMENT_MODEL_SAVE_DEST, TEAM_MODEL_SAVE_DEST
+import logregTrainer as Trainer
 
 csvdata = "./data/trainDataStaged.csv"
 
@@ -25,8 +27,8 @@ target_attr = 'Success'
 
 
 # If the model target directory is not present, make it
-if not isdir(TRAINED_MODEL_DIR):
-    makedirs(TRAINED_MODEL_DIR)
+if not isdir(Trainer.TRAINED_MODEL_DIR):
+    makedirs(Trainer.TRAINED_MODEL_DIR)
 
 
 # Get the project ID from each row, so we can ensure that data from the 
@@ -53,7 +55,7 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
     # Note: train and test are arrays of indexes, not the data itself
     for train, test in gkf.split(x, y, groups=projectGroups):
         # Sequence a scaler and the model, so any input data is normalised before being fed to the model
-        pipeLR = Pipeline([('scaler', StandardScaler()), ('sgd', SGDClassifier())])
+        pipeLR = Pipeline([('scaler', StandardScaler()), ('sgd', SGDClassifier(early_stopping=True, validation_fraction=0.1))])
 
         # Get the data using the indexes produced by GroupKFold
         x_train = x[train]
@@ -66,13 +68,10 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
         # Then get predictions for the test split
         y_pred = pipeLR.predict(x_test)
 
-        # Measure the regression error of the model (difference from true)
-        mse = mean_squared_error(y_test, y_pred)
-        print(" > MSE:",str(mse))
-
         # Get the model's accuracy (note: accuracy + mse = 1)
         modelScore = accuracy_score(y_test, y_pred)
-
+        print("Accuracy Score:", str(modelScore))
+        
         # Only retain the model which exhibits the highest score (most accurate)
         if modelScore > bestScore:
             bestEstimator = pipeLR
@@ -83,30 +82,22 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
     y_pred = bestEstimator.predict(x)
     print(classification_report(y, y_pred))
 
-    # Save the accuracy of the model 
-    # (so the Risk-Assessment has the likelihood the model is correct)
-    accuracyFile = open(model_accuracy_dest, "w")
-    accuracyFile.write(str(bestScore))
-    accuracyFile.close() 
+    # Get the model performance as a dictionary, so we can extract its TP/TF/FP/FN rates
+    Trainer.write_model_accuracy(y, y_pred, model_accuracy_dest)
 
     # # Export the trained model for use by the Risk-Assessment system
     dump(bestEstimator, model_save_dest)
 
+    # Display the PR-Curve (Precision-Recall) for the best-performing model for this field 
+    display = PrecisionRecallDisplay.from_predictions(y, y_pred, name="SGDClassifier")
+    _ = display.ax_.set_title("2-class Precision-Recall curve for " + dependent_header)
+    plt.show()
 
-# Each tuple describes one model to be trained
-modelParams = [
-    (independent_headers, 'Success', OVERALL_MODEL_SAVE_DEST),
-    (independent_headers, 'Finance Success', FINANCE_MODEL_SAVE_DEST),
-    (independent_headers, 'Timescale Success', TIMESCALE_MODEL_SAVE_DEST),
-    (independent_headers, 'Code Success', CODE_MODEL_SAVE_DEST),
-    (independent_headers, 'Team Success', TEAM_MODEL_SAVE_DEST),
-    (independent_headers, 'Management Success', MANAGEMENT_MODEL_SAVE_DEST)
-]
 
 
 # Train a model for each of the identified target parameters, 
 # dumping the trained model to the given destination file
-for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in modelParams:
+for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in Trainer.modelParams:
     print("Training on dependent variable \'" + dep_hdr + "\'")
     train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
 

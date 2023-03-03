@@ -1,7 +1,8 @@
-from RiskAssessment import RiskAssessment
 from joblib import load
-import logregTrainer as trainer
 from projectDf import independent_headers
+from pandas import read_csv
+from RiskAssessment import RiskAssessment
+import logregTrainer as trainer
 
 class RiskAssessmentGenerator:
 
@@ -16,17 +17,19 @@ class RiskAssessmentGenerator:
         self.overallSuccessModel = self.load_model_and_accuracy(trainer.OVERALL_MODEL_SAVE_DEST)
         print("Loaded all models")
 
+
     def load_model_and_accuracy(self, destAndAccuracy):
         (model_dest, accuracy_dest) = destAndAccuracy
         model = load(model_dest)
-        accuracyFile = open(accuracy_dest, "r")
-        accuracy = float(accuracyFile.read())
-        accuracyFile.close()
-        return (model, accuracy)
+        # Retrieve the True-Success and False-Failure rates for the model from the save file
+        accuracyDf = read_csv(accuracy_dest)
+        tsr = accuracyDf.iloc[0]['TSR']
+        ffr = accuracyDf.iloc[0]['FFR']
+        return (model, tsr, ffr)
 
 
     def get_model_confidence(self, state, modelAndAccuracy):
-        (model, mdlAccuracy) = modelAndAccuracy
+        (model, trueSuccess, falseFailure) = modelAndAccuracy
         # Get the confidence of the model in failure (0) or success (1)
         confProbs = model.predict_proba(state)[0]
 
@@ -36,8 +39,10 @@ class RiskAssessmentGenerator:
         #     print("Prediction: Success")
 
         # Determine the overall chance of success by using Conditional Probability & Bayes Formula
-        # SUCCESS = MODEL_SUCCESS * MODEL_ACCURATE + (1-MODEL_FAILURE) * MODEL_INACCURATE
-        overallSuccessFloat = confProbs[1] * mdlAccuracy + confProbs[0] * (1-mdlAccuracy)
+        # This is important because the model has a non-zero chance to mis-classify a project as a failure,
+        # so this case also contributes to the overall likelihood of success.
+        #   SUCCESS = MODEL_SUCCESS * MODEL_ACCURATE + (1-MODEL_FAILURE) * MODEL_INACCURATE
+        overallSuccessFloat = confProbs[1] * trueSuccess + confProbs[0] * falseFailure
 
         # Convert estimation to a probability
         # overallSuccessProb = round(100 * overallSuccessFloat, 2)
