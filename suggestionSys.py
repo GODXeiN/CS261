@@ -1,14 +1,14 @@
-#Arbitrarily selected. To be reviewed
+# Arbitrarily selected. To be reviewed
 criticalBud = 0.3
-riskyBud = 0.6
+riskyBud = 0.5
 criticalTime = 0.3
-riskyTime = 0.6
+riskyTime = 0.5
 criticalCode = 0.3
-riskyCode = 0.6
+riskyCode = 0.5
 criticalTeam = 0.3
-riskyTeam = 0.6
+riskyTeam = 0.5
 criticalMan = 0.3
-riskyMan = 0.6
+riskyMan = 0.5
 
 class suggSys():
     def __init__(self,budgetRisk,timeRisk,codeRisk,teamRisk,managementRisk):
@@ -20,50 +20,41 @@ class suggSys():
     
     def getBudgetRisk(self):
         if self.budgetRisk < criticalBud:
-            return "The budget is not enough to meet all the needs of the project. It is strongly recommended to increase the funding or reduce the team size in order to succeed."
+            return "The budget is far below the requirements of the project. It is strongly recommended to increase the funding or reduce the team size in order to succeed."
         elif self.budgetRisk < riskyBud:
-            return "The budget might not be enough for the whole duration of the project. It is recommended to increase the funding or reduce the team size in order to succeed."
+            return "The budget may not be sufficient for the whole duration of the project. It is recommended to increase the funding or reduce the team size for greater chance of success."
         else:
-            return "The budget could eventually not be enough. You could consider increasing the funding or reducing the team size."
+            return "The budget is likely sufficient for the project. For the highest chance of success, ensure your project has a contingency fund, in case of unexpected development costs."
     
     def getTimeRisk(self):
         if self.timeRisk < criticalTime:
-            return "The project is not on track and will most likely not meet the final deadline. It is strongly recommended to change the requirements or push the deadline."
+            return "The project is not on-track and has a high likelihood of not meeting the final deadline. It is strongly recommended to postpone the deadline and increase the team size."
         elif self.timeRisk < riskyTime:
-            return "The project has missed some internal deadlines throughout the length of development. It is recommended to change the requirements or push the deadline."
+            return "The project is at risk of not meeting its deadlines. It is recommended to postpone the deadline or increase the team size."
         else:
-            return "The project has missed only a few internal deadlines. You could consider changing the requirements or the deadline in order to succeed."
+            return "The project is on-track to meet its deadlines. You should avoid moving the deadline closer or altering the requirements during development."
         
     def getCodeRisk(self):
         if self.codeRisk < criticalCode:
-            return "The code has a lot of unresolved bugs and critically low levels of  commits compared to previous months. These issues must be addressed. It is strongly recommended to check on the software development team regarding their progress and what issues they may be facing in regards to the code."
+            return "The project repository is likely to contain many unresolved bugs and critically low levels of commits compared to previous months. It is strongly recommended to check-in with all members of the development team. Consider postponing the deadline or introducing more team members."
         elif self.codeRisk < riskyCode:
-            return "The code has unresolved bugs and much less commits compared to previous months. These issues should be addressed. It is recommended to check on the software development team regarding their progress and what issues they may be facing in regards to the code."
+            return "The project repository may contain unresolved bugs or some members of the development team may be behind on code commits. It is recommended to check-in with all members of the development team and if any issues arise, introduce more team members."
         else:
-            return "The code may have some unresolved bugs and less commits compared to previous months. Consider checking on the software development team regarding their progress and what issues they may be facing in regards to the code." 
+            return "The project repository is being regularly updated and outstanding issues are being resolved. Continue to monitor this aspect as the project approaches completion." 
+    
     def getTeamRisk(self):
         if self.teamRisk < criticalTeam:
-            return "Team aspect of project is at a critical level and must be addressed immediately, this may be due to several aspects such as: low team communication, low team commitment, low team morale."
+            return "The project team is showing high levels of fatigue and failure. You should address this issue immediately - consider reducing team-member work-loads, introducing more team members, and priorising team morale."
         elif self.teamRisk < riskyTeam:
-            return "Team aspect of project is at a risky level and should be addressed, this may be due to several aspects such as: low team communication, low team commitment, low team morale."
+            return "The project team is showing some signs of fatigue and failure. You may wish to consider reducing team-member work-loads or showing departmental support for the project."
         else:
-            return "Team aspect of project is may not be at a satisfactory level, this may be due to several aspects such as: low team communication, low team commitment, low team morale."
+            return "The project team is operating well and has a good chance of succeeding. To prevent future issues, ensure that the team is not over-worked and communicates well."
+    
     def getManagementRisk(self):
         if self.managementRisk < criticalMan:
-            return "Members of the team feel extremely neglected by the top-level management. It is strongly recommended that the top management shows their commitment to the success of the project through things such as having one-on-one sessions with the team members to get to know how they’re feeling regarding the project and any issues they may have."
+            return "The management of the team is likely to fail. It is strongly recommended that management increases its support for the project and the team."
         elif self.managementRisk < riskyMan:
-            return "Members of the team don’t feel supported by the top-level management. It is recommended that the top management shows their commitment to the success of the project through things such as having one-on-one sessions with the team members to get to know how they’re feeling regarding the project and any issues they may have."
+            return "The management of the team has a moderate risk of failure. It is recommended that the top management shows their commitment to the success of the project, for example, by having one-on-one sessions with team members to understand any issues they are facing."
         else:
-            return "Members of the team may feel slightly unsupported by the top-level management. Consider getting the top management to show their commitment to the success of the project through things such as having one-on-one sessions with the team members to get to know how they’re feeling regarding the project and any issues they may have."
-        
-
-def main():
-    suggs = suggSys(0.9,0.5,0.1,0.2,1)
-    print(suggs.getBudgetRisk())
-    print(suggs.getTimeRisk())
-    print(suggs.getCodeRisk())
-    print(suggs.getTeamRisk())
-    print(suggs.getManagementRisk())
-    
-main()
-   
+            return "The management of the team is likely to succeed. Continue to provide the team with support and show your commitment to the project."
+           
