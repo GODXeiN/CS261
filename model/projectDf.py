@@ -23,8 +23,8 @@ KEY_BUDGET_ELAPSED = 'Budget Elapsed'
 KEY_TIME_ELAPSED = 'Time Elapsed'                           
 
 ## Internal project deadlines (development checkpoints)
-# List of deadlines which are upcoming
-KEY_ACTIVE_SUBDEADLINES = 'Active Subdeadlines'      
+# Number of deadlines which are upcoming
+KEY_NUM_SUBDEADLINE_ACTIVE = 'Active Subdeadlines'      
 # Number of internal deadlines for the entire project       
 KEY_NUM_SUBDEADLINE_TOTAL = 'Total Subdeadlines'            
 # Number of internal deadlines which have passed
@@ -144,7 +144,7 @@ class SimProject:
     def add_initial_sub_deadlines(self, initRow):
         # Controls the distribution of the number of subdeadlines
         # (steeper gradient = fewer projects with more deadlines)
-        FREQUENCY_GRADIENT = 3
+        FREQUENCY_GRADIENT = 2
         # Generate an exponentially distributed float [0,1]
         subdeadlines_float = exponential(random.random(), FREQUENCY_GRADIENT, 1, 0)
         initRow[KEY_NUM_SUBDEADLINE_TOTAL] = int(MAX_INIT_SUBDEADLINES * subdeadlines_float)
@@ -177,11 +177,16 @@ class SimProject:
 
             expectedProgress = dlDay / endDate
             startDate = dlDay + 1
-            # Store subdeadlines as a tuple, representing the target day, and the expected progress in the range [0,1]
-            subdeadlines.append((dlDay, expectedProgress))
 
-        initRow[KEY_ACTIVE_SUBDEADLINES] = subdeadlines
-        # print(str(subdeadlines))
+            # Only add the subdeadline if it is before the overall deadline (100% completion)
+            if expectedProgress < 1 and dlDay < endDate:
+                # Store subdeadlines as a tuple, representing the target day, and the expected progress in the range [0,1]
+                subdeadlines.append((dlDay, expectedProgress))
+
+
+        self.active_subdeadlines = subdeadlines
+        # print("Generated Subdeadlines:", str(subdeadlines))
+        initRow[KEY_NUM_SUBDEADLINE_ACTIVE] = len(subdeadlines)
 
 
     def __init__(self, pid, minBudget, maxBudget, unitBudget, minDeadline, maxDeadline):
@@ -243,7 +248,7 @@ class SimProject:
                     KEY_BUDGET:0, KEY_COST_TO_DATE:0, KEY_BUDGET_ELAPSED:0.0,
                     KEY_OVERALL_DEADLINE:0, KEY_DURATION:0, KEY_TIME_ELAPSED:0.0,
                     KEY_NUM_SUBDEADLINE_TOTAL:0, KEY_NUM_SUBDEADLINE_MET:0, KEY_SUBDEADLINES_MET_PROPORTION:0.0,
-                    KEY_ACTIVE_SUBDEADLINES:[], KEY_NUM_SUBDEADLINE_EXPIRED:0,
+                    KEY_NUM_SUBDEADLINE_ACTIVE:0, KEY_NUM_SUBDEADLINE_EXPIRED:0,
                     KEY_CODE_COMMITS:0, KEY_CODE_BUGS_TOTAL:0, KEY_CODE_BUGS_RESOLVED:0, KEY_CODE_BUGS_RESOLUTION:0.0,
                     KEY_MET_COMMUNICATION:0, KEY_MET_COMMITMENT:0, KEY_MET_MORALE:0, KEY_MET_PLANNING:0, KEY_MET_SUPPORT:0,
                     KEY_TEAM_RANKS:[], KEY_TEAM_AVG_RANK:0, KEY_TEAM_SIZE:0,
@@ -400,7 +405,7 @@ class SimProject:
     # Check if we've passed (met or missed) any internal deadlines, and if so,
     # make them no longer active and record the result of the deadline
     def checkForExpiredDeadlines(self, state):
-        activeDeadlines = state[KEY_ACTIVE_SUBDEADLINES]
+        activeDeadlines = self.active_subdeadlines
         currentProgress = state[KEY_PROGRESS]
         currentDay = state[KEY_DURATION]
         current = (currentDay, currentProgress)
@@ -412,19 +417,22 @@ class SimProject:
 
             # If the project has passed the deadline's required progress
             if currentProgress >= expProgress:
-                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
+                # Remove the deadline which was met from the Active list
                 activeDeadlines.pop(0)
-                # print("Met a deadline!")
+                state[KEY_NUM_SUBDEADLINE_ACTIVE] -= 1
+                # Record that a deadline passed AND was met
+                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
                 state[KEY_NUM_SUBDEADLINE_MET] += 1
+                # print("Met a subdeadline")
+
             # Otherwise, if progress is insufficient and the deadline has passed 
             elif currentDay >= dlDay:
-                # Move the deadline to the list of expired deadlines
-                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
+                # Remove the deadline which has expired from the active list
                 activeDeadlines.pop(0)
-
-                # print("Deadline check. Current:", str(current), "vs DL:", str(subdl))
-                # if currentProgress < expProgress:
-                    # print("Missed a deadline!")
+                state[KEY_NUM_SUBDEADLINE_ACTIVE] -= 1
+                # Record that a deadline passed
+                state[KEY_NUM_SUBDEADLINE_EXPIRED] += 1
+               
             # Otherwise, stop checking, as the next deadline is still in the future but hasn't been met yet
             else:
                 break
@@ -624,13 +632,18 @@ class SimProject:
     # Metrics Used: Deadline; Duration
     def eval_time(self, state):
         timeFactor = calc_ratio_safe(state[KEY_OVERALL_DEADLINE], state[KEY_DURATION])
-        return sigmoid_func(timeFactor, -5, 0)
+        # Compress the time factor into the range [0,1]
+        timeNormalised = sigmoid_func(timeFactor, -5, 0) 
+        # Calculate the proportion of passed subdeadlines which were met
+        subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
+        # print("Sub DL Ratio:", str(subDlRatio))
+        # print(subDlRatio)
+        return (timeNormalised + subDlRatio) / 2
 
     # Metrics Used: Top-Level Management Support; Project Planning
     def eval_management(self, state):
         supportPlusPlanning = (state[KEY_MET_SUPPORT] + state[KEY_MET_PLANNING]) / (2 * SOFT_METRIC_MAX)
-        subDlRatio = calc_ratio_safe(state[KEY_NUM_SUBDEADLINE_MET], state[KEY_NUM_SUBDEADLINE_EXPIRED])
-        return (supportPlusPlanning + subDlRatio) / 2
+        return supportPlusPlanning
 
     # Metrics Used: CommitFrequency; ResolvedBugs; TotalBugs
     def eval_code(self, state):

@@ -18,25 +18,6 @@ from projectDf import independent_headers, KEY_ID
 from joblib import dump
 import logregTrainer as Trainer
 
-csvdata = "./data/trainDataStaged.csv"
-
-# Open the project training/test data
-df = pd.read_csv(csvdata)
-print("Loaded Training File:", csvdata)
-
-# Dependent field; the field we want to model to predict
-target_attr = 'Success'
-
-
-# If the model target directory is not present, make it
-if not isdir(Trainer.TRAINED_MODEL_DIR):
-    makedirs(Trainer.TRAINED_MODEL_DIR)
-
-
-# Identify the groups (projects) from which each sample belongs
-projectGroups = np.array(df[KEY_ID])
-gkf = StratifiedGroupKFold(n_splits=10)
-
 
 
 def train_model_and_dump(independent_headers, dependent_header, model_save_dest, model_accuracy_dest):
@@ -84,9 +65,27 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
 
 
 
-# Train a model for each of the identified target parameters, 
-# dumping the trained model to the given destination file
-for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in Trainer.modelParams:
-    print("Training on dependent variable \'" + dep_hdr + "\'")
-    train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
+if __name__ == '__main__':
+    csvdata = "./data/trainDataStaged.csv"
+
+    # Open the project training/test data
+    df = pd.read_csv(csvdata)
+    print("Loaded Training File:", csvdata)
+
+    # Dependent field; the field we want to model to predict
+    target_attr = 'Success'
+
+    # If the model target directory is not present, make it
+    if not isdir(Trainer.TRAINED_MODEL_DIR):
+        makedirs(Trainer.TRAINED_MODEL_DIR)
+
+    # Identify the groups (projects) from which each sample belongs
+    projectGroups = np.array(df[KEY_ID])
+    gkf = StratifiedGroupKFold(n_splits=10)
+
+    # Train a model for each of the identified target parameters, 
+    # dumping the trained model to the given destination file
+    for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in Trainer.modelParams:
+        print("Training on dependent variable \'" + dep_hdr + "\'")
+        train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
 
