@@ -1,24 +1,29 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session
 from flask_login import login_user, login_required, current_user
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline
 from . import db
 from datetime import datetime, timedelta
-import sys
 
 views = Blueprint('views', __name__)
 
-@views.route('/home')
+@views.route('/home', methods=['GET','POST'])
 @login_required
 def home():
+    session.pop('pID', None)
     finished = []
     ongoing = []
     projects = Project.query.filter_by(managerID = current_user.managerID).all()
     for entry in projects:
         hmetrics = Hard_Metrics.query.filter_by(projectID = entry.projectID).first()
         if hmetrics.status == 0:
-            ongoing.append((entry.title,hmetrics.budget,datetime.utcfromtimestamp(entry.dateCreated).strftime('%Y-%m-%d %H:%M:%S'),datetime.utcfromtimestamp(hmetrics.deadline).strftime('%Y-%m-%d %H:%M:%S')))
+            ongoing.append((entry.title,hmetrics.budget,datetime.utcfromtimestamp(entry.dateCreated).strftime('%Y-%m-%d %H:%M:%S'),datetime.utcfromtimestamp(hmetrics.deadline).strftime('%Y-%m-%d %H:%M:%S'), entry.projectID))
         else:
             finished.append((entry,hmetrics))
+    if request.method == "POST":
+        # record the user name
+        session["pID"] = request.form['details']
+        # redirect to the main page
+        return redirect("/view")
     return render_template("home.html", user=current_user, ongoing=ongoing, finished=finished)
 
 @views.route('/create_project', methods=['GET','POST'])
@@ -51,11 +56,25 @@ def create_project():
     #Post on refresh page bug!!
     return render_template("create_project.html")
 
+@views.route('/end_project', methods=['GET','POST'])
+@login_required
+def end_project():
+    if session.get('pID') is None:
+        return redirect("/home")
+    
+    pID = session['pID']
+    projectName = Project.query.filter_by(projectID=pID).first().title
+
+    return render_template("end_project.html")
 
 @views.route('/view')
 @login_required
 def view():
-    return render_template("view.html")
+    if session.get('pID') is None:
+        return redirect("/home")
+    pID = session['pID']
+    projectName = Project.query.filter_by(projectID=pID).first().title
+    return render_template("view.html", projectName=projectName)
 
 @views.route('/faq')
 @login_required
@@ -65,11 +84,17 @@ def faq():
 @views.route('/suggestions')
 @login_required
 def suggestions():
-    return render_template("suggestions.html")
+    if session.get('pID') is None:
+        return redirect("/home")
+    pID = session['pID']
+    projectName = Project.query.filter_by(projectID=pID).first().title
+    return render_template("suggestions.html", projectName=projectName)
 
 @views.route('/manage_devs', methods=['GET','POST'])
 @login_required
 def manage_devs():
+    if session.get('pID') is None:
+        return redirect("/home")
     
     if request.method=='POST':
         dev_email=request.form.get('dev_email')
@@ -84,7 +109,7 @@ def manage_devs():
             print(dev_email)
             db.session.add(new_dev)
             db.session.commit()
-            flash('Developer added successfuly.', category='success')
+            flash('Developer added successfully.', category='success')
 
 
     devs=Worker.query.all()
@@ -106,6 +131,9 @@ def delete_dev(id):
 @views.route('/project_details', methods=['GET','POST'])
 @login_required
 def project_details():
+    if session.get('pID') is None:
+        return redirect("/home")
+    
     project_details=Project.query.filter_by(projectID=1).first()
     hard_metrics=Hard_Metrics.query.filter_by(projectID=1).first()
     old_deadline=Hard_Metrics.deadline
