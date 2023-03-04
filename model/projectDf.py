@@ -64,11 +64,12 @@ STATUS_CANCELLED = -1
 
 # When a project passes its deadline/budget, management support decreases each week
 OVERRUN_SUPPORT_MULTIPLIER = 0.999
-# The cost of a single day's work from a developer with Rank 1. 
-# Note: the cost scales proportional to the rank
-# e.g. a Rank 2 dev costs: 2 * 150/day = 300/day
-#      a Rank 5 dev costs: 5 * 150/day = 750/day 
-COST_PER_DEV_RANK_DAY = 150
+# The base daily wage paid to a developer irrespective of their rank
+BASE_COST_PER_DEV_DAY = 75
+# The daily wage paid on top of the base cost
+# e.g. a Rank 2 dev costs: 75 + 2 * 75/day = 150/day
+#      a Rank 5 dev costs: 75 + 5 * 75/day = 450/day 
+COST_PER_DEV_RANK_DAY = 75
 # Maximum size of the team for a project of scale 1/10
 TEAM_UNIT_SIZE = 6
 # Maximum number of internal deadlines generated at the start of a project
@@ -458,7 +459,7 @@ class SimProject:
         # Calculate the probability of incurring costs (between 0.05 and 0.5)
         probIncurCosts = 0.1 * exponential(planning, -1, 0, 0.05)
 
-        maxCost = 5000     # Maximum possible cost
+        maxCost = 10000     # Maximum possible cost
         baseCost = 0.01    # Minimum possible cost, as a proportion of the maximum cost
 
         costK = 5          # Steepness of exponential cost function 
