@@ -46,66 +46,85 @@ class Git_Link:
         except:
             return repos
     
-    def getOpenIssueCount(self):
-        issues = self.repo.get_issues(state='open')
+    #Number of Bugs marked as open
+    def getOpenBugCount(self):
+        if self.repo is None:
+            return -1
+        bugs = self.repo.get_issues(state='open',labels=[self.repo.get_label('bug')])
         count = 0
-        for issue in issues:
+        for bug in bugs:
             count+=1
         return count
     
-    def getClosedIssueCount(self):
-        issues = self.repo.get_issues(state='closed')
+    #Number of Bugs marked as resolved
+    def getClosedBugCount(self):
+        if self.repo is None:
+            return -1
+        bugs = self.repo.get_issues(state='closed',labels=[self.repo.get_label('bug')])
         count = 0
-        for issue in issues:
+        for bug in bugs:
             count+=1
         return count
 
-    def getCommitFreq(self):
-        #Commits over the last 28 days
-        since = datetime.now() - timedelta(28)
-        monthCommits = self.repo.get_commits(since=since)
-        totalCommits = self.repo.get_commits()
-        monthCount = 0
-        totalCount = 0
-        for commit in monthCommits:
-            monthCount+=1
-        for commit in totalCommits:
-            totalCount+=1
+    #Number of total Bugs over the project lifespan
+    def getTotalBugCount(self):
+        if self.repo is None:
+            return -1
+        return self.getOpenBugCount() + self.getClosedBugCount()
 
-        return monthCount/totalCount
-
-
-
-def main(): 
-    gl = Git_Link("","")
-
-    # validToken = False
-    # while not validToken:
-    #     print("Please enter a valid token:")
-    #     token = input()
-    #     if gl.checkToken(token):
-    #         validToken = True
-    token = 'addTokenHere'
-
-    # validURL = False
-    # while not validURL:
-    #     print("Please enter a valid URL:")
-    #     print(gl.getRepoList(token))
-    #     url = input()
-    #     if gl.checkURL(token,url):
-    #         validURL = True
-
-    url = 'ZekromMarkII/FEH-Discord-Bot'
+    #Number of commits over project lifespan
+    def getTotalCommits(self):
+        if self.repo is None:
+            return -1
+        commits = self.repo.get_commits()
+        count = 0
+        for commit in commits:
+            count+=1
+        return count
     
-    gitLink = Git_Link(token,url)
+    #Ratio of closed Bugs to total Bugs
+    def getDefectFixRate(self):
+        if self.repo is None:
+            return -1
+        #potential to divide by 0
+        try:
+            rate = self.getClosedBugCount()/self.getTotalBugCount()
+        except:
+            rate = 1
+        return rate
 
-    print(gitLink.getOpenIssueCount())
-    print(gitLink.getClosedIssueCount())
-    print(gitLink.getCommitFreq())
-
-main()
 
 
+# def main(): 
+#     gl = Git_Link("","")
+
+#     # validToken = False
+#     # while not validToken:
+#     #     print("Please enter a valid token:")
+#     #     token = input()
+#     #     if gl.checkToken(token):
+#     #         validToken = True
+#     token = 'token'
+
+#     # validURL = False
+#     # while not validURL:
+#     #     print("Please enter a valid URL:")
+#     #     print(gl.getRepoList(token))
+#     #     url = input()
+#     #     if gl.checkURL(token,url):
+#     #         validURL = True
+
+#     url = 'ZekromMarkII/FEH-Discord-Bot'
+    
+#     gitLink = Git_Link(token,url)
+
+#     print(gitLink.getTotalBugCount())
+#     print(gitLink.getClosedBugCount())
+#     print(gitLink.getOpenBugCount())
+#     print(gitLink.getDefectFixRate())
+#     print(gitLink.getTotalCommits())
+
+# main()
     
 
 
