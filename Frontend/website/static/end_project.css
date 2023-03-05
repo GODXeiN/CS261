@@ -4,7 +4,7 @@
 .brand {
     position: absolute;
     left: 50%;
-    margin-left: -65px !important;  /* 50% of your logo width */
+    margin-left: -135px !important;  /* 50% of your logo width */
     display: block;
 }
 .confirm>button{

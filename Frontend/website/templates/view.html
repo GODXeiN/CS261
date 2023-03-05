@@ -56,6 +56,7 @@
                                     <button onclick="location.href='/view'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Project Details</button>
                                 </div>
                             </li>
+                            {% if finished %}
                             <li>
                                 <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">
                                     <button onclick="location.href='/project_details'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Edit Project Details</button>
@@ -76,6 +77,7 @@
                                     <button onclick="location.href='/end_project'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">End Project</button>
                                 </div>
                             </li>
+                            {% endif %}
                                 <a href="#" class="nav-link" area-current="page"></a>
                             </li>
                             <li>

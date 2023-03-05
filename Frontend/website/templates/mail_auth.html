@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Welcome to the login page</title>
+        <link rel="stylesheet" href="static/style_login.css">
+        <script src="https://kit.fontawesome.com/bcbd91026b.js" crossorigin="anonymous"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    </head>
+    <body style="background-color:#212429;">
+        <div class="container min-vh-100 min-vw-20 align-items-center d-flex justify-content-center">
+            <form method="POST">
+                <div class="container2">
+                    <div class="text_div"><h2><font color="#fff">Enter your email to proceed to the survey</font></h2></div>  
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text"><i class="fa-solid fa-envelope fa-2x"></i></div>    
+                            </div>
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            id="email" name="email" 
+                            placeholder="Enter Email"
+                            required
+                        />
+                        </div>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text"><i class="fa fa-id-badge fa-2x"></i></div>    
+                            </div>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="workerID" name="workerID" 
+                            placeholder="Enter Developer ID"
+                            required
+                        />
+                        </div>
+                    </div>
+                    <br>
+                    <div class="confirm text-center"><button type="submit" class="btn btn-primary">Proceed</button></div>
+                    
+                </div>
+            </form>
+        </div>
+    </body>
+</html>

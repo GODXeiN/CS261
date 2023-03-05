@@ -121,13 +121,12 @@ class Survey_Response(db.Model):
     projectID = db.Column(db.Integer, db.ForeignKey('Project.projectID'), primary_key = True)
     workerID = db.Column(db.Integer, db.ForeignKey('Worker.workerID'), primary_key = True)
     date = db.Column(db.Integer, primary_key = True)
-    metricOne = db.Column(db.Float)
-    metricTwo = db.Column(db.Float)
-    metricThree = db.Column(db.Float)
-    metricFour = db.Column(db.Float)
-    metricFive = db.Column(db.Float)
+    metricOne = db.Column(db.Integer)
+    metricTwo = db.Column(db.Integer)
+    metricThree = db.Column(db.Integer)
+    metricFour = db.Column(db.Integer)
 
-    def __init__(self, projectID, workerID, date, metricOne, metricTwo, metricThree, metricFour, metricFive):
+    def __init__(self, projectID, workerID, date, metricOne, metricTwo, metricThree, metricFour):
         self.projectID = projectID
         self.workerID = workerID
         self.date = date
@@ -135,7 +134,25 @@ class Survey_Response(db.Model):
         self.metricTwo = metricTwo
         self.metricThree = metricThree
         self.metricFour = metricFour
+
+class End_Result(db.Model):
+    __tablename__='End_Result'
+    projectID = db.Column(db.Integer, db.ForeignKey('Project.projectID'), primary_key = True)
+    metricOne = db.Column(db.Integer)
+    metricTwo = db.Column(db.Integer)
+    metricThree = db.Column(db.Integer)
+    metricFour = db.Column(db.Integer)
+    metricFive = db.Column(db.Integer)
+    metricSix = db.Column(db.Integer)
+
+    def __init__(self, projectID, metricOne, metricTwo, metricThree, metricFour, metricFive, metricSix):
+        self.projectID = projectID
+        self.metricOne = metricOne
+        self.metricTwo = metricTwo
+        self.metricThree = metricThree
+        self.metricFour = metricFour
         self.metricFive = metricFive
+        self.metricSix = metricSix
 
 # https://sqlite.org/lang_createtrigger.html#cautions_on_the_use_of_before_triggers
 
