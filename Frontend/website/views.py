@@ -210,7 +210,7 @@ def survey(projectID):
     
     today_unix=int(datetime.now().timestamp())
 
-    last_submission = Survey_Response.query.filter_by(workerID = session['wID']).order_by(Survey_Response.date.desc()).first()
+    last_submission = Survey_Response.query.filter_by(workerID = session['wID'], projectID=projectID).order_by(Survey_Response.date.desc()).first()
     interval = int(Project.query.filter_by(projectID = projectID).first().updateInterval) * 24 * 60 * 60
     lastSurveyed = int(Project.query.filter_by(projectID = projectID).first().dateLastSurveyed)
 
