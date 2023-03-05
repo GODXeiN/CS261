@@ -1,10 +1,51 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, session
+from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Flask
 from flask_login import login_user, login_required, current_user
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response
-from . import db
+from . import db, app
 from datetime import datetime, timedelta
+from flask_mail import Mail, Message
+import atexit
+
+from apscheduler.schedulers.background import BackgroundScheduler
 
 views = Blueprint('views', __name__)
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'gerokenpack@gmail.com'
+app.config['MAIL_PASSWORD'] = 'kwkkhixwxpdwiuby'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
+scheduler = BackgroundScheduler(daemon=True)
+
+def scheduledTask():
+    with app.app_context():
+        today_unix=int(datetime.now().timestamp())
+        projects = Project.query.filter(Project.projectID > 0).order_by(Project.projectID.desc())
+        for project in projects:
+            devs = []
+            hmetrics = Hard_Metrics.query.filter_by(projectID = project.projectID).order_by(Hard_Metrics.date.desc()).first()
+            secondsInterval = project.updateInterval * 24 * 60 * 60
+            lastSurveyed = project.dateLastSurveyed
+            pID = project.projectID
+            if (int(hmetrics.status) == 0) and ((secondsInterval + lastSurveyed) <= today_unix):
+                project.dateLastSurveyed = today_unix
+                db.session.commit()
+                k=Works_On.query.filter_by(projectID = pID).all()
+                for entry in k:
+                    q = Worker.query.filter_by(workerID = entry.workerID).first()
+                    devs.append((entry.workerID,q.emailAddr)) 
+            if devs:
+                for developer in devs:
+                    msg = Message('Periodic Survey', sender = 'gerokenpack@gmail.com', recipients = [f'{developer[1]}'])
+                    msg.html = f"""<p> Hello,</p> <p>You have been prompted to answer a periodic survey for the project {project.title}. Your developer ID is {developer[0]}. You can access the survey using the following link: http://127.0.0.1:5000/survey_auth/{pID}</p> <p>This is an automatic email. Do not reply.</p><img src="https://i.imgur.com/x044DiX.png" width="100" height="100" /> """
+                    mail.send(msg)    
+
+scheduler.add_job(func=scheduledTask, trigger="interval", seconds=86400)
+scheduler.start()
+
+atexit.register(lambda: scheduler.shutdown())
 
 @views.route('/home', methods=['GET','POST'])
 @login_required
