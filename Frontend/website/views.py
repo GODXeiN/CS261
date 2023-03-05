@@ -131,30 +131,32 @@ def suggestions():
 @views.route('/manage_devs', methods=['GET','POST'])
 @login_required
 def manage_devs():
+
+    devs=[]
+
     if session.get('pID') is None:
         return redirect("/home")
     
     if Hard_Metrics.query.filter_by(projectID = session.get('pID')).first().status != 0:
-        finished = False
         return redirect("/view")
     
     if request.method=='POST':
         dev_email=request.form.get('dev_email')
 
-        dev=Worker.query.filter_by(emailAddr=dev_email).first()
         new_dev=Worker(emailAddr=dev_email, experienceRank=None)
-        if dev:
-            flash('Developer already exists.', category='error')
-            
-            
-        else:
-            print(dev_email)
-            db.session.add(new_dev)
-            db.session.commit()
-            flash('Developer added successfully.', category='success')
+        db.session.add(new_dev)
+        db.session.commit()
+        new_worksOn=Works_On(projectID = session['pID'], workerID = Worker.query.filter_by(emailAddr=dev_email).order_by(Worker.workerID.desc()).first().workerID)
+        db.session.add(new_worksOn)
+        db.session.commit()
+        flash('Developer added successfully.', category='success')
 
 
-    devs=Worker.query.all()
+    k=Works_On.query.filter_by(projectID = session['pID']).all()
+
+    for entry in k:
+        q = Worker.query.filter_by(workerID = entry.workerID).first()
+        devs.append((entry.workerID,q.emailAddr))
     #going from the user page to manage dev page gets an error once you submit
     return render_template("manage_devs.html", devs=devs)
 
@@ -166,7 +168,7 @@ def survey_auth(projectID):
         worker=Worker.query.filter_by(emailAddr=email, workerID=workerID).first()
         if worker:
             workerExperience = worker.experienceRank
-            if Works_On.query.filter_by(workerID=workerID, projectID=projectID):
+            if Works_On.query.filter_by(workerID=workerID, projectID=projectID).first():
                 session['wID'] = workerID
                 if workerExperience == None:
                     session['psID'] = projectID
@@ -234,8 +236,10 @@ def survey(projectID):
 @views.route('/delete_dev/<id>')
 def delete_dev(id):
     dev=Worker.query.filter_by(workerID=id).first()
+    work = Works_On.query.filter_by(workerID=id).first()
     if dev:
         db.session.delete(dev)
+        db.session.delete(work)
         db.session.commit()
         flash('Developer has been successfully deleted.', category='warning')
         return redirect(url_for('views.manage_devs'))
