@@ -71,8 +71,6 @@ def home():
 @login_required
 def create_project():
     today=datetime.now()
-    tomorrow= today+timedelta(1)
-    # tomorrow_unix=int(tomorrow.timestamp())
     today_unix=int(datetime.now().timestamp())
     if request.method=='POST':
         title=request.form.get('title')
@@ -89,7 +87,6 @@ def create_project():
             proj_id=project.get_id()
 
             hard_metrics=Hard_Metrics(proj_id, date=today_unix, budget=budget, costToDate=0, deadline=unix_deadline, status=0)
-            #0=ongoing, 1=Completed, 2=Failed
             db.session.add(hard_metrics)
             db.session.commit()
             return redirect("/home")
@@ -169,6 +166,53 @@ def suggestions():
     projectName = Project.query.filter_by(projectID=pID).first().title
     return render_template("suggestions.html", projectName=projectName)
 
+@views.route('/int_deadline', methods=['GET','POST'])
+@login_required
+def int_deadline():
+    pID=session.get('pID')
+    if session.get('pID') is None:
+        return redirect("/home")
+    if Hard_Metrics.query.filter_by(projectID = pID).first().status != 0:
+        return redirect("/view")
+    project_deadline=Hard_Metrics.query.filter_by(projectID=pID).order_by(Hard_Metrics.date.desc()).first().deadline
+    date=0
+    if request.method=='POST':
+        title=request.form.get('title')
+        date=request.form.get('int_dd')
+        date_time_obj = datetime.strptime(date, '%Y-%m-%d')
+        unix_date=int(date_time_obj.timestamp())
+
+        if project_deadline>unix_date:
+            existing_title=Deadline.query.filter_by(title=title).first()
+            if not existing_title:
+                new_deadline=Deadline(projectID=pID,title=title,deadlineDate=date, achieved=0)
+                db.session.add(new_deadline)
+                db.session.commit()
+                flash('Internal deadline successfully added.', category='success')
+            else:
+                flash('Please try a different title. Current one is taken', category='warning')
+        else:
+            flash('Failed to add internal deadline. The date must be less than or equal to the final project deadline.', category='error')
+    deadlines=Deadline.query.filter_by(projectID=pID).all()
+    
+    return render_template("int_deadline.html", deadlines=deadlines, date=date)
+
+@views.route('/complete_deadline/<id>/<int:status>')
+def complete_deadline(id,status):
+    ded=Deadline.query.filter_by(deadlineID=id).first()
+
+    if ded:
+        ded.achieved=status
+        db.session.commit()
+        if status==1:
+            flash('Deadline status has been set to: SUCCESS.', category='success')
+        elif status==2:
+            flash('Deadline status has been set to: FAILED.', category='warning')
+
+        return redirect(url_for('views.int_deadline'))
+    else:
+        flash('Something went wrong.', category='error')
+    return redirect(url_for('views.int_deadline'))
 @views.route('/manage_devs', methods=['GET','POST'])
 @login_required
 def manage_devs():
@@ -183,21 +227,33 @@ def manage_devs():
     
     if request.method=='POST':
         dev_email=request.form.get('dev_email')
+        all_works_on=Works_On.query.filter_by(projectID=session['pID']).all()
+        i=0
+        all_workers=[]
+        for item in all_works_on:
+            worker=Worker.query.filter_by(workerID=item.workerID).first()
+            email=worker.emailAddr
+            all_workers.append(email)
+            
+        if dev_email not in all_workers:
+            new_dev=Worker(emailAddr=dev_email, experienceRank=None)
+            db.session.add(new_dev)
+            new_worksOn=Works_On(projectID = session['pID'], workerID = Worker.query.filter_by(emailAddr=dev_email).order_by(Worker.workerID.desc()).first().workerID)
+            db.session.add(new_worksOn)
+            db.session.commit()
+            flash('Developer added successfully.', category='success')
 
-        new_dev=Worker(emailAddr=dev_email, experienceRank=None)
-        db.session.add(new_dev)
-        db.session.commit()
-        new_worksOn=Works_On(projectID = session['pID'], workerID = Worker.query.filter_by(emailAddr=dev_email).order_by(Worker.workerID.desc()).first().workerID)
-        db.session.add(new_worksOn)
-        db.session.commit()
-        flash('Developer added successfully.', category='success')
-
-
+        else:
+            flash('Developer already exists in current project.', category='error')
     k=Works_On.query.filter_by(projectID = session['pID']).all()
 
     for entry in k:
         q = Worker.query.filter_by(workerID = entry.workerID).first()
         devs.append((entry.workerID,q.emailAddr))
+    
+ 
+        
+        
     #going from the user page to manage dev page gets an error once you submit
     return render_template("manage_devs.html", devs=devs)
 
@@ -300,12 +356,14 @@ def project_details():
     pID = session['pID']
     
     project_details=Project.query.filter_by(projectID=pID).first()
-    hard_metrics=Hard_Metrics.query.filter_by(projectID=pID).first()
+    hard_metrics=Hard_Metrics.query.filter_by(projectID=pID).order_by(Hard_Metrics.date.desc()).first()
     old_deadline=hard_metrics.deadline
     old_budget=hard_metrics.budget
     old_cost=hard_metrics.costToDate
     git=Git_Link.query.filter_by(projectID=pID).first()
     
+    budget=old_budget
+    cost=old_cost
     #here we must include the project-specific values. The following is generic as in project id is just 1
 
     if git:
@@ -415,30 +473,37 @@ def project_details():
             if git_token:
                 git.gitToken=git_token
                 db.session.commit()
+                
             
             if git_link:
                 git.repositoryURL=git_link
                 db.session.commit()
+                
 
         elif git_link and git_token:
             add_git=Git_Link(projectID = pID, gitToken = git_token, repositoryURL=git_link)
             db.session.add(add_git)
             db.session.commit()
+            token=git_token
+            url=git_link
         else:
             flash("Warning! Could not configure git settings. Ensure that you have entered both the link and the token", category='warning')
 
-        if int_deadline:
-            if int_date:
-                new_deadline=Deadline(projectID=pID,title=int_deadline,deadlineDate=int_date, achieved=0)
-                db.session.add(new_deadline)
-                db.session.commit()
-            else:
-                flash('You must add a deadline date alongside the title', category='error')
+        # if int_deadline:
+        #     if int_date:
+        #         new_deadline=Deadline(projectID=pID,title=int_deadline,deadlineDate=int_date, achieved=0)
+        #         db.session.add(new_deadline)
+        #         db.session.commit()
+        #     else:
+        #         flash('You must add a deadline date alongside the title', category='error')
 
         if update_interval:
             project_details.updateInterval=update_interval
             db.session.commit() 
+        
+        
+            
 
-    return render_template("project_details.html",project_details=project_details, hard_metrics=hard_metrics, token=token, url = url)
+    return render_template("project_details.html",project_details=project_details, budget=budget, cost=cost, token=token, url = url)
 
 

@@ -44,17 +44,17 @@
 
 .text_div>a{
     position: relative;
-    color: #183153; 
+    color: white; 
 
     display: inline-block;
     left: 43%;
     top: -8vh;
 }
 .text_div>a:hover{
-    color: #183153; 
+    color: white; 
 }
 .text_div>a:visited{
-    color: #183153; 
+    color: white; 
 }
 
 .confirm{

@@ -1,7 +1,8 @@
+
 .container2{
     position: relative;
     margin: 0 auto;
-    background: #febe7e;
+    background: #212429;
     padding-top: 10%;
     padding-bottom: 10%;
     width: 125%;
@@ -9,14 +10,13 @@
     border-radius: 2vh;
     text-align: center;
     padding-top: -50%;
-
-
 }
 
 .text_div{
     position: relative;
     right: 5%;
     text-align: center;
+    color: #fff;
 }
 .form-check-input{
     left: 20%;
@@ -35,28 +35,22 @@
 
 .text_div>a{
     position: relative;
-    color: #183153; 
+    color: white; 
 
     display: inline-block;
     left: 43%;
     top: -8vh;
 }
 .text_div>a:hover{
-    color: #183153; 
+    color: white; 
 }
 .text_div>a:visited{
-    color: #183153; 
+    color: white; 
 }
 
-.confirm>button{
-    background-color: #ec7263;
-    border-color: #ec7263;
-    
-}
-
-.confirm>button:hover{
-    background-color: #a75265;
-    border-color: #a75265;
+.go_back>button:hover{
+    background-color:  #97cba9;
+    border-color:  #97cba9;
 }
 
 .url_div{

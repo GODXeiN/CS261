@@ -39,6 +39,30 @@
                 </li>
             </ul>
         </nav>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'warning' %}
+                    <div class="alert alert-warning alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% elif category == 'error' %}
+                    <div class="alert alert-danger alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% else %}
+                    <div class="alert alert-success alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
         <!-- https://www.youtube.com/watch?v=3GNBl-v-ZHI -->
         <div class="container d-flex flex-column flex-md-row">
             <div class="fixnav">
@@ -60,6 +84,11 @@
                                 <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">
                                     <button onclick="location.href='/project_details'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Edit Project Details</button>
                                 </div>
+                            </li>
+                            <li>
+                              <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">
+                                  <button onclick="location.href='/int_deadline'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Internal Deadlines</button>
+                              </div>
                             </li>
                             <li>
                                 <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">

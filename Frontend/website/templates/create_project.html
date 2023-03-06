@@ -8,13 +8,38 @@
         <script src="https://kit.fontawesome.com/bcbd91026b.js" crossorigin="anonymous"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     </head>
-    <body>
+    <body style="background-color: #E8F0FE;">
+
         
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'warning' %}
+                    <div class="alert alert-warning alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% elif category == 'error' %}
+                    <div class="alert alert-danger alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% else %}
+                    <div class="alert alert-success alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
         <div class="container min-vh-100 min-vw-20 align-items-center d-flex justify-content-center">
             <form method="POST">
                 <div class="container2">
                     <div class="exit"></div>
-                    <div class="text_div"><h2>Create A Project</h2><a href="/"><i class="fa-solid fa-xmark fa-2x"></i></a></div>  
+                    <div class="text_div"><h2>Create A Project</h2><a href="/view"><i class="fa-solid fa-xmark fa-2x"></i></a></div>  
                     <div class="mb-3">
                         <div class="labels"><label for="title" class="form-label">Project Title</label></div>
                         <div class="input-group">
@@ -41,6 +66,7 @@
                             id="deadline" name="deadline" 
                             placeholder="Enter deadline"
                             title="The deadline should be at least a day after tomorrow"
+                            min=""
                             required
                         />
                     </div>
@@ -68,26 +94,22 @@
             </form>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    {% if category == 'error' %}
-                        <div class="alert alert-danger alert-dismissable fade show" role="alert">
-                            {{message}} 
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            
-                        </div>
-                    {% else %}
-                        <div class="alert alert-success alert-dismissable fade show" role="alert">
-                            {{message}} 
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
         </script>
-         
+        <script>
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            var dd = tomorrow.getDate();
+            var mm = tomorrow.getMonth() + 1; // January is 0!
+            var yyyy = tomorrow.getFullYear();
+            if (dd < 10) {
+              dd = '0' + dd;
+            }
+            if (mm < 10) {
+              mm = '0' + mm;
+            }
+            var tomorrowString = yyyy + '-' + mm + '-' + dd;
+            document.getElementById("deadline").setAttribute("min", tomorrowString);
+          </script>
        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
     </body>

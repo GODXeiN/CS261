@@ -89,6 +89,11 @@
                         </li>
                         <li>
                             <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">
+                                <button onclick="location.href='/int_deadline'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Internal Deadlines</button>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="card mx-auto side" style="max-width: 15rem; min-width: 15rem;">
                                 <button onclick="location.href='/manage_devs'" type="button" class="btn btn-secondary btn-lg center button" area-current="page">Manage Developers</button>
                             </div>
                         </li>
@@ -151,7 +156,7 @@
                                 type="number" 
                                 class="form-control" 
                                 id="new_budget" name="new_budget" 
-                                placeholder="£{{hard_metrics.budget}}"
+                                placeholder="£{{budget}}"
                                 
                             />
                         </div>
@@ -166,7 +171,7 @@
                                 type="date" 
                                 class="form-control" 
                                 id="new_deadline" name="new_deadline" 
-                                
+                                min=""
                             />
                         </div>
                     </div>         
@@ -201,7 +206,7 @@
                                 type="number" 
                                 class="form-control" 
                                 id="cost_to_date" name="cost_to_date" 
-                                placeholder="Project's expenses to date: {{hard_metrics.costToDate}}"
+                                placeholder="Project's expenses to date: {{cost}}"
                                 
                             />
                         </div>
@@ -285,5 +290,21 @@
             </div>
             
         </form>
+        <script>
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            var dd = tomorrow.getDate();
+            var mm = tomorrow.getMonth() + 1; // January is 0!
+            var yyyy = tomorrow.getFullYear();
+            if (dd < 10) {
+              dd = '0' + dd;
+            }
+            if (mm < 10) {
+              mm = '0' + mm;
+            }
+            var tomorrowString = yyyy + '-' + mm + '-' + dd;
+            document.getElementById("new_deadline").setAttribute("min", tomorrowString);
+          </script>
+          
     </div>
     </body>
