@@ -1,4 +1,4 @@
-RAG.generate_ra() takes as input a project state (Pandas Series) which contains the following fields:
+RAG.generate_ra() takes as input a project state (Pandas Series; labelled row of data) which contains the following fields:
 
     * 'pID'                             - INTEGER representing project ID
     * 'Budget'                          - INTEGER for the total budget allocated for the project (hard metric)
@@ -14,5 +14,13 @@ RAG.generate_ra() takes as input a project state (Pandas Series) which contains 
     * 'Team Morale'                     - FLOAT in [1,5] (soft metric)
     * 'Project Planning'                - FLOAT in [1,5] (soft metric)
     * 'Top-Level Management Support'    - FLOAT in [1,5] (soft metric)
-    * 'Average Team Experience'         - FLOAT in [1,5]; the mean of the experience rank for all team members
+    * 'Average Team Experience'         - FLOAT in [1,5]; the mean of the experience rank for all team members    
     * 'Team Size'                       - INTEGER, the number of project dev. team members
+
+Minimum Required Fields:
+    * 'Budget' 
+    * 'Overall Deadline'
+    * All 5 soft metrics, default value: 3
+    * Must include at least one team member, of minimum rank (i.e. 'Team Size' = 1, 'Average Team Experience' = 1.0)
+    * All other fields must be set to 0 or 0.0 (depending on type)
+    # No NULL/None fields may appear
