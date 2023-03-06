@@ -165,23 +165,6 @@ class End_Result(db.Model):
         self.metricFour = metricFour
         self.metricFive = metricFive
 
-# https://sqlite.org/lang_createtrigger.html#cautions_on_the_use_of_before_triggers
-
-# deadline_date = DDL('''\
-# CREATE TRIGGER deadlineCheck
-#     AFTER INSERT ON Deadline
-#     WHEN (
-#             (NOT (new.deadlineDate) BETWEEN 
-#                 (SELECT dateCreated FROM Project WHERE projectID = new.projectID) 
-#                 AND 
-#                 (SELECT finalDate FROM Hard_Metrics WHERE projectID = new.projectID)
-#             )
-#         )
-#     BEGIN
-#         DELETE FROM deadline WHERE deadlineID = new.deadlineID;
-#     END;''')
-# event.listen(Deadline.__table__, 'before_create', deadline_date)
-
 def init_db():
     db.create_all()
 

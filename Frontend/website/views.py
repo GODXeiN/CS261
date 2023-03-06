@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Flask
 from flask_login import login_user, login_required, current_user
-from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response
+from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response, Risk
 from . import db, app
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
+from .suggestionSys import suggSys
 import atexit
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -189,8 +190,28 @@ def suggestions():
         return redirect("/view")
     
     pID = session['pID']
+
+    risk = Risk.query.filter_by(projectID = pID).order_by(Risk.date.desc()).first()
+
+    riskFinance = 0
+    riskCode = 0
+    riskManagement = 0
+    riskTimescale = 0
+    riskTeam = 0
+
+    if risk:
+        riskFinance = risk.riskFinance
+        riskCode = risk.riskCode
+        riskManagement = risk.riskManagement
+        riskTimescale = risk.riskTimescale
+        riskTeam = risk.riskTeam
+
+    suggestions = suggSys(riskFinance, riskTimescale, riskCode, riskTeam, riskManagement)
+
     projectName = Project.query.filter_by(projectID=pID).first().title
-    return render_template("suggestions.html", projectName=projectName)
+
+    
+    return render_template("suggestions.html", projectName=projectName, budget=suggestions.getBudgetRisk(), code=suggestions.getCodeRisk(), management=suggestions.getManagementRisk(), timescale = suggestions.getTimeRisk(), team = suggestions.getTeamRisk())
 
 @views.route('/int_deadline', methods=['GET','POST'])
 @login_required
