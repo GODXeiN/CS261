@@ -80,11 +80,21 @@ class Risk(db.Model):
     projectID = db.Column(db.Integer, db.ForeignKey('Project.projectID'), primary_key = True)
     date = db.Column(db.Integer, primary_key = True)
     riskLevel = db.Column(db.Float)
+    riskFinance = db.Column(db.Float)
+    riskCode = db.Column(db.Float)
+    riskTeam = db.Column(db.Float)
+    riskManagement = db.Column(db.Float)
+    riskTimescale = db.Column(db.Float)
 
-    def __init__(self, projectID, date, riskLevel):
+    def __init__(self, projectID, date, riskLevel, riskFinance, riskCode, riskTeam, riskManagement, riskTimescale):
         self.projectID = projectID
         self.date = date
         self.riskLevel = riskLevel
+        self.riskFinance = riskFinance
+        self.riskCode = riskCode
+        self.riskTeam = riskTeam
+        self.riskManagement = riskManagement
+        self.riskTimescale = riskTimescale
 
 class Git_Link(db.Model):
     __tablename__='Git_Link'
@@ -102,6 +112,7 @@ class Worker(db.Model):
     workerID = db.Column(db.Integer, primary_key = True, autoincrement = True)
     emailAddr = db.Column(db.String(50))
     experienceRank = db.Column(db.Integer)
+    planning = db.Column(db.Integer)
 
     def __init__(self, emailAddr, experienceRank):
         self.emailAddr = emailAddr
@@ -125,8 +136,9 @@ class Survey_Response(db.Model):
     metricTwo = db.Column(db.Integer)
     metricThree = db.Column(db.Integer)
     metricFour = db.Column(db.Integer)
+    metricFive = db.Column(db.Integer)
 
-    def __init__(self, projectID, workerID, date, metricOne, metricTwo, metricThree, metricFour):
+    def __init__(self, projectID, workerID, date, metricOne, metricTwo, metricThree, metricFour, metricFive):
         self.projectID = projectID
         self.workerID = workerID
         self.date = date
@@ -134,6 +146,7 @@ class Survey_Response(db.Model):
         self.metricTwo = metricTwo
         self.metricThree = metricThree
         self.metricFour = metricFour
+        self.metricFive = metricFive
 
 class End_Result(db.Model):
     __tablename__='End_Result'
@@ -143,16 +156,14 @@ class End_Result(db.Model):
     metricThree = db.Column(db.Integer)
     metricFour = db.Column(db.Integer)
     metricFive = db.Column(db.Integer)
-    metricSix = db.Column(db.Integer)
 
-    def __init__(self, projectID, metricOne, metricTwo, metricThree, metricFour, metricFive, metricSix):
+    def __init__(self, projectID, metricOne, metricTwo, metricThree, metricFour, metricFive):
         self.projectID = projectID
         self.metricOne = metricOne
         self.metricTwo = metricTwo
         self.metricThree = metricThree
         self.metricFour = metricFour
         self.metricFive = metricFive
-        self.metricSix = metricSix
 
 # https://sqlite.org/lang_createtrigger.html#cautions_on_the_use_of_before_triggers
 

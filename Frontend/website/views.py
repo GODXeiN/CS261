@@ -113,15 +113,14 @@ def end_project():
     hm = Hard_Metrics.query.filter_by(projectID = pID).order_by(Hard_Metrics.date.desc()).first()
 
     if request.method=='POST':
-        metricOne=request.form.get('questionOne')
-        metricTwo=request.form.get('questionTwo')
-        metricThree=request.form.get('questionThree')
-        metricFour=request.form.get('questionFour')
-        metricFive=request.form.get('questionFive')
-        metricSix=request.form.get('questionSix')
+        metricOne=request.form.get('questionTwo')
+        metricTwo=request.form.get('questionThree')
+        metricThree=request.form.get('questionFour')
+        metricFour=request.form.get('questionFive')
+        metricFive=request.form.get('questionSix')
         new_status=request.form.get('status')
 
-        end = End_Result(projectID = pID, metricOne=metricOne, metricTwo=metricTwo, metricThree = metricThree, metricFour = metricFour, metricFive = metricFive, metricSix = metricSix)
+        end = End_Result(projectID = pID, metricOne=metricOne, metricTwo=metricTwo, metricThree = metricThree, metricFour = metricFour, metricFive = metricFive)
         new_metrics = Hard_Metrics(projectID=pID, date=today_unix, budget=hm.budget, costToDate=hm.costToDate, deadline=hm.deadline,status=new_status)
         db.session.add(end)
         db.session.add(new_metrics)
@@ -131,13 +130,16 @@ def end_project():
 
     return render_template("end_project.html", projectName=projectName)
 
-@views.route('/view')
+@views.route('/view', methods=['GET','POST'])
 @login_required
 def view():
+
+    finished = True
+
     if session.get('pID') is None:
         return redirect("/home")
     
-    finished = True
+    today_unix=int(datetime.now().timestamp())
 
     if session.get('pID') is None:
         return redirect("/home")
@@ -146,6 +148,30 @@ def view():
     
     pID = session['pID']
     projectName = Project.query.filter_by(projectID=pID).first().title
+
+    if request.method == 'POST':
+        devs = []
+        if request.form['submit_button'] == 'Send Email':
+            projects = Project.query.filter_by(projectID = pID)
+            hmetrics = Hard_Metrics.query.filter_by(projectID = pID).order_by(Hard_Metrics.date.desc()).first()
+            if (int(hmetrics.status) == 0):
+                projects.dateLastSurveyed = today_unix
+                db.session.commit()
+                k=Works_On.query.filter_by(projectID = pID).all()
+                for entry in k:
+                    q = Worker.query.filter_by(workerID = entry.workerID).first()
+                    devs.append((entry.workerID,q.emailAddr)) 
+                if devs:
+                    for developer in devs:
+                        msg = Message('Periodic Survey', sender = 'gerokenpack@gmail.com', recipients = [f'{developer[1]}'])
+                        msg.html = f"""<p> Hello,</p> <p>You have been prompted to answer a periodic survey for the project {projectName}. Your developer ID is {developer[0]}. You can access the survey using the following link: http://127.0.0.1:5000/survey_auth/{pID}</p> <p>This is an automatic email. Do not reply.</p><img src="https://i.imgur.com/x044DiX.png" width="100" height="100" /> """
+                        mail.send(msg)
+
+        elif request.form['submit_button'] == 'Calculate Risk':
+            pass # do something else
+        else:
+            pass # unknown
+
     return render_template("view.html", projectName=projectName, finished=finished)
 
 @views.route('/faq')
@@ -292,7 +318,9 @@ def initial_survey():
 
     if request.method=='POST':
         experience=request.form.get('questionThree')
+        planning=request.form.get('questionTwo')
         worker.experienceRank = experience
+        worker.planning = planning
         db.session.commit()
         return redirect(f'/survey/{psID}')
 
@@ -322,7 +350,8 @@ def survey(projectID):
         metricTwo = request.form.get('questionTwo')
         metricThree = request.form.get('questionThree')
         metricFour = request.form.get('questionFour')
-        survey = Survey_Response(projectID=projectID, workerID=session['wID'], date=today_unix, metricOne=metricOne, metricTwo=metricTwo, metricThree=metricThree, metricFour=metricFour)
+        metricFive = request.form.get('questionFive')
+        survey = Survey_Response(projectID=projectID, workerID=session['wID'], date=today_unix, metricOne=metricOne, metricTwo=metricTwo, metricThree=metricThree, metricFour=metricFour, metricFive = metricFive)
         db.session.add(survey)
         db.session.commit()
         return redirect('/home')
