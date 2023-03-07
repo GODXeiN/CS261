@@ -114,14 +114,14 @@ def end_project():
     hm = Hard_Metrics.query.filter_by(projectID = pID).order_by(Hard_Metrics.date.desc()).first()
 
     if request.method=='POST':
-        metricOne=request.form.get('questionTwo')
-        metricTwo=request.form.get('questionThree')
-        metricThree=request.form.get('questionFour')
-        metricFour=request.form.get('questionFive')
-        metricFive=request.form.get('questionSix')
+        financeMetric=request.form.get('questionTwo')
+        timescaleMetric=request.form.get('questionThree')
+        managementMetric=request.form.get('questionFour')
+        teamMetric=request.form.get('questionFive')
+        codeMetric=request.form.get('questionSix')
         new_status=request.form.get('status')
 
-        end = End_Result(projectID = pID, metricOne=metricOne, metricTwo=metricTwo, metricThree = metricThree, metricFour = metricFour, metricFive = metricFive)
+        end = End_Result(projectID = pID, financeMetric=financeMetric, timescaleMetric=timescaleMetric, managementMetric=managementMetric, teamMetric=teamMetric, codeMetric=codeMetric)
         new_metrics = Hard_Metrics(projectID=pID, date=today_unix, budget=hm.budget, costToDate=hm.costToDate, deadline=hm.deadline,status=new_status)
         db.session.add(end)
         db.session.add(new_metrics)
@@ -367,12 +367,11 @@ def survey(projectID):
 
 
     if request.method=='POST':
-        metricOne = request.form.get('questionOne')
-        metricTwo = request.form.get('questionTwo')
-        metricThree = request.form.get('questionThree')
-        metricFour = request.form.get('questionFour')
-        metricFive = request.form.get('questionFive')
-        survey = Survey_Response(projectID=projectID, workerID=session['wID'], date=today_unix, metricOne=metricOne, metricTwo=metricTwo, metricThree=metricThree, metricFour=metricFour, metricFive = metricFive)
+        managementMetric = request.form.get('questionOne')
+        commitmentMetric = request.form.get('questionTwo')
+        communicationMetric = request.form.get('questionThree')
+        happinessMetric = request.form.get('questionFour')
+        survey = Survey_Response(projectID=projectID, workerID=session['wID'], date=today_unix, managementMetric=managementMetric, commitmentMetric=commitmentMetric, communicationMetric=communicationMetric, happinessMetric=happinessMetric)
         db.session.add(survey)
         db.session.commit()
         return redirect('/home')

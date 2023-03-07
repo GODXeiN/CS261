@@ -132,38 +132,38 @@ class Survey_Response(db.Model):
     projectID = db.Column(db.Integer, db.ForeignKey('Project.projectID'), primary_key = True)
     workerID = db.Column(db.Integer, db.ForeignKey('Worker.workerID'), primary_key = True)
     date = db.Column(db.Integer, primary_key = True)
-    metricOne = db.Column(db.Integer)
-    metricTwo = db.Column(db.Integer)
-    metricThree = db.Column(db.Integer)
-    metricFour = db.Column(db.Integer)
-    metricFive = db.Column(db.Integer)
+    managementMetric = db.Column(db.Integer)
+    commitmentMetric = db.Column(db.Integer)
+    communicationMetric = db.Column(db.Integer)
+    happinessMetric = db.Column(db.Integer)
 
-    def __init__(self, projectID, workerID, date, metricOne, metricTwo, metricThree, metricFour, metricFive):
+    def __init__(self, projectID, workerID, date, managementMetric, commitmentMetric, communicationMetric, happinessMetric):
         self.projectID = projectID
         self.workerID = workerID
         self.date = date
-        self.metricOne = metricOne
-        self.metricTwo = metricTwo
-        self.metricThree = metricThree
-        self.metricFour = metricFour
-        self.metricFive = metricFive
+        self.mmanagementMetric = managementMetric
+        self.commitmentMetric = commitmentMetric
+        self.communicationMetric = communicationMetric
+        self.happinessMetric = happinessMetric
 
 class End_Result(db.Model):
     __tablename__='End_Result'
     projectID = db.Column(db.Integer, db.ForeignKey('Project.projectID'), primary_key = True)
-    metricOne = db.Column(db.Integer)
-    metricTwo = db.Column(db.Integer)
-    metricThree = db.Column(db.Integer)
-    metricFour = db.Column(db.Integer)
-    metricFive = db.Column(db.Integer)
+    financeMetric = db.Column(db.Integer)
+    timescaleMetric = db.Column(db.Integer)
+    managementMetric = db.Column(db.Integer)
+    teamMetric = db.Column(db.Integer)
+    codeMetric = db.Column(db.Integer)
+    success = db.Column(db.Integer)
 
-    def __init__(self, projectID, metricOne, metricTwo, metricThree, metricFour, metricFive):
+    def __init__(self, projectID, financeMetric, timescaleMetric, managementMetric, teamMetric, codeMetric, success):
         self.projectID = projectID
-        self.metricOne = metricOne
-        self.metricTwo = metricTwo
-        self.metricThree = metricThree
-        self.metricFour = metricFour
-        self.metricFive = metricFive
+        self.financeMetric = financeMetric
+        self.timescaleMetric = timescaleMetric
+        self.managementMetric = managementMetric
+        self.teamMetric = teamMetric
+        self.codeMetric = codeMetric
+        self.success = success
 
 def init_db():
     db.create_all()
