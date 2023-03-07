@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="icon" href="static/logo.png">
+        <title>Home Page</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <link rel="stylesheet" href="static\home.css"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    </head>
+    <body style="background-color:#E8F0FE;">
+        <nav class="navbar navbar-dark bg-dark">
+            <div class="brand"><h1><font color="#fff">Home Page / Projects</font></h1></div>
+            <ul class="nav ms-auto">
+                <li class="nav-item" >
+                    <a class="nav-link" href="/faq">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-question-circle" viewBox="0 0 16 16">
+                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                            <path d="M5.255 5.786a.237.237 0 0 0 .241.247h.825c.138 0 .248-.113.266-.25.09-.656.54-1.134 1.342-1.134.686 0 1.314.343 1.314 1.168 0 .635-.374.927-.965 1.371-.673.489-1.206 1.06-1.168 1.987l.003.217a.25.25 0 0 0 .25.246h.811a.25.25 0 0 0 .25-.25v-.105c0-.718.273-.927 1.01-1.486.609-.463 1.244-.977 1.244-2.056 0-1.511-1.276-2.241-2.673-2.241-1.267 0-2.655.59-2.75 2.286zm1.557 5.763c0 .533.425.927 1.01.927.609 0 1.028-.394 1.028-.927 0-.552-.42-.94-1.029-.94-.584 0-1.009.388-1.009.94z"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person" viewBox="0 0 16 16">
+                            <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10Z"/>
+                        </svg>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
+                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
+                        </svg>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'warning' %}
+                    <div class="alert alert-warning alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% elif category == 'error' %}
+                    <div class="alert alert-danger alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        
+                    </div>
+                {% else %}
+                    <div class="alert alert-success alert-dismissable fade show" role="alert">
+                        {{message}} 
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+        <div class="welcome">
+            Welcome, {{user.firstName}}
+        </div>
+        <div class="modal-body row gx-5">
+            <div class="col-md-6 d-flex justify-content-end " style="flex-direction: row;">
+                <ul style="margin-left:-2em;list-style-type:none;"> 
+                    <li>
+                        <div class="row">
+                            <div class="card text-white bg-dark mb-3" style="max-width: 22rem; max-height: 60px; min-width: 22rem; text-align: center;">
+                                <div class="card-body">
+                                    <h5 class="card-title">Ongoing Projects</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <div style="line-height:30%;">
+                        <br>
+                    </div>
+                        {% if ongoing %}
+                            {% for entry in ongoing %}
+                                <li>
+                                    <div class="row">
+                                        <div class="card text-white bg-dark" style="max-width: 22rem; min-width: 22rem; text-align: center;">
+                                            <h5 class="card-header"> {{entry[0]}} </h5>
+                                            <div class="card-body">
+                                                <p class="card-text">Created: {{entry[2]}} <br> Deadline: {{entry[3]}} <br> Budget: {{entry[1]}}</p>
+                                                <form action="" method="post">
+                                                    <div class="row">
+                                                        <button class="btn btn-primary" value="{{entry[4]}}" method="POST" name="details">View Project</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div style="line-height:30%;">
+                                            <br>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>
+                                <div class="row">
+                                    <div class="card text-white bg-dark mb-3 border-danger text-align: center;" style="max-width: 22rem; max-height: 60px;">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-danger" style="text-align: center;">No Projects Found</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-6 d-flex justify-content-start" style="flex-direction: row;">
+                <ul style="margin-left:-2em;list-style-type:none;">
+                    <li>
+                        <div class="row">
+                            <div class="card text-white bg-dark mb-3" style="max-width: 22rem; max-height: 60px; min-width: 22rem; text-align: center;">
+                                <div class="card-body">
+                                    <h5 class="card-title">Finished Projects</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <div style="line-height:30%;">
+                        <br>
+                    </div>
+                        {% if finished %}
+                            {% for entry in finished %}
+                                <li>
+                                    <div class="row">
+                                        <div class="card text-white bg-dark" style="max-width: 22rem; min-width: 22rem; text-align: center;">
+                                            <h5 class="card-header"> {{entry[0]}} </h5>
+                                            <div class="card-body">
+                                                <p class="card-text">Created: {{entry[2]}} <br> Deadline: {{entry[3]}} <br> Budget: {{entry[1]}}</p>
+                                                <form action="" method="post">
+                                                    <div class="row">
+                                                        <button class="btn btn-primary" value="{{entry[4]}}" method="POST" name="details">View Project</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <div style="line-height:30%;">
+                                            <br>
+                                        </div>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li>
+                                <div class="row">
+                                    <div class="card text-white bg-dark mb-3 border-danger" style="max-width: 22rem; max-height: 60px;">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-danger" style="text-align: center;">No Projects Found</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center confirm">
+            <button type="button" onclick="location.href='/create_project'" class="btn btn-secondary btn-lg center button">Create New Project</button>
+        </div>
+    </body>
+</html>
