@@ -1,8 +1,5 @@
 ## Tests the Logistic Regression Model with a single project 
-
-
-from joblib import load
-from projectDf import SimProject, independent_headers
+from projectDf import SimProject
 
 import RiskAssessmentGenerator 
 

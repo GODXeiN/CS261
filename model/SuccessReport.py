@@ -1,10 +1,10 @@
-KEY_FINANCE = 'Finance'
-KEY_TEAM = 'Team'
-KEY_TIMESCALE = 'Timescale'
-KEY_MANAGEMENT = 'Management'
-KEY_CODE = 'Code'
-KEY_OVERALL = 'Overall'
-
+# These strings are also used as the Success Column headers in the training data CSV
+KEY_FINANCE = 'Finance Success'
+KEY_TEAM = 'Team Success'
+KEY_TIMESCALE = 'Timescale Success'
+KEY_MANAGEMENT = 'Management Success'
+KEY_CODE = 'Code Success'
+KEY_OVERALL = 'Success'
 
 
 # Weightings of each factor when calculating the overall success
@@ -85,6 +85,14 @@ class SuccessReport:
 
     def get_normalised_score(self):
         return self.get_success_attribute(KEY_OVERALL)
+
+
+    # Given a project state, add the success values as new columns
+    def add_binary_to_state(self, projectState):
+        binary_successes = self.get_binary_successes()
+        for (key, val) in binary_successes.items():
+            projectState[key] = val
+        return projectState
 
 
     def __str__(self):
