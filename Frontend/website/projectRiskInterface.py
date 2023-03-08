@@ -1,4 +1,3 @@
-from __future__ import print_function # In python 2.7
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response
 from .model import RiskAssessmentGenerator as RAG
 import pandas as pd
@@ -6,7 +5,6 @@ from .model import projectDf as SimProject
 from .model.dataManipulation import calc_ratio_safe
 from .gitLink import Git_Link as GitLinkObj
 from sqlalchemy import func
-import sys
 import time
 
 # Acts as an intermediate step between the website and the RiskAssessmentGenerator by 
@@ -84,12 +82,14 @@ class ProjectRiskInterface:
         # Find the interval over which the surveys will be averaged (i.e. the last week)
         endWindow = int(time.time())
         startWindow = endWindow - week
-        avgCommunication = Survey_Response.query.with_entities(func.avg(Survey_Response.communicationMetric).label("avg_communication")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).all()
-        print(avgCommunication, file=sys.stderr)
+        avgCommunication = Survey_Response.query.with_entities(func.avg(Survey_Response.communicationMetric).label("avg_communication")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).scalar()
+        avgMorale = Survey_Response.query.with_entities(func.avg(Survey_Response.happinessMetric).label("avg_morale")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).scalar()
+        avgCommitment = Survey_Response.query.with_entities(func.avg(Survey_Response.commitmentMetric).label("avg_commitment")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).scalar()
+        avgManagement = Survey_Response.query.with_entities(func.avg(Survey_Response.managementMetric).label("avg_management")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).scalar()
         teamCommunication = avgCommunication
-        teamMorale = avgCommunication
-        teamCommitment = avgCommunication
-        teamSupport = avgCommunication
+        teamMorale = avgMorale
+        teamCommitment = avgCommitment
+        teamSupport = avgManagement
         projectPlanning = Worker.query.with_entities(func.avg(Worker.planning).label("avg_planning")).join(Works_On).filter(Works_On.projectID == prjID).scalar()
         
         if teamCommunication == None or teamCommunication == 0.0:
@@ -134,11 +134,11 @@ class ProjectRiskInterface:
         projectStateDict[SimProject.KEY_TEAM_SIZE] = teamSize
 
         ## Add the soft metrics here
-        projectStateDict[SimProject.KEY_MET_COMMUNICATION] = 0 #teamCommunication
-        projectStateDict[SimProject.KEY_MET_MORALE] = 0 #teamMorale
-        projectStateDict[SimProject.KEY_MET_COMMITMENT] = 0 #teamCommitment
-        projectStateDict[SimProject.KEY_MET_SUPPORT] = 0 #teamSupport
-        projectStateDict[SimProject.KEY_MET_PLANNING] = 0 #projectPlanning
+        projectStateDict[SimProject.KEY_MET_COMMUNICATION] = teamCommunication
+        projectStateDict[SimProject.KEY_MET_MORALE] = teamMorale
+        projectStateDict[SimProject.KEY_MET_COMMITMENT] = teamCommitment
+        projectStateDict[SimProject.KEY_MET_SUPPORT] = teamSupport
+        projectStateDict[SimProject.KEY_MET_PLANNING] = projectPlanning
 
         projectState = pd.Series(projectStateDict)
 

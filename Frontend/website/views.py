@@ -1,3 +1,4 @@
+from __future__ import print_function # In python 2.7
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Flask
 from flask_login import login_user, login_required, current_user
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response, Risk
@@ -7,6 +8,7 @@ from flask_mail import Mail, Message
 from .suggestionSys import suggSys
 from . import projectRiskInterface as PRI
 from .model import RiskAssessment
+import sys
 
 import atexit
 
@@ -153,6 +155,21 @@ def view():
     pID = session['pID']
     projectName = Project.query.filter_by(projectID=pID).first().title
 
+    existingRisk = Risk.query.filter_by(projectID = pID).first()
+
+    if not existingRisk:
+        pri = PRI.ProjectRiskInterface()
+        riskAssessment = pri.get_risk_assessment(pID)
+        overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
+        riskFinance = riskAssessment.get_success_attribute(RiskAssessment.KEY_FINANCE)
+        riskCode = riskAssessment.get_success_attribute(RiskAssessment.KEY_CODE)
+        riskTeam = riskAssessment.get_success_attribute(RiskAssessment.KEY_TEAM)
+        riskManagement = riskAssessment.get_success_attribute(RiskAssessment.KEY_MANAGEMENT)
+        riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
+        new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
+        db.session.add(new_table)
+        db.session.commit()
+
     if request.method == 'POST':
         devs = []
         if request.form['submit_button'] == 'Send Email':
@@ -174,9 +191,17 @@ def view():
         elif request.form['submit_button'] == 'Calculate Risk':
             pri = PRI.ProjectRiskInterface()
             riskAssessment = pri.get_risk_assessment(pID)
-            values = riskAssessment.successValues
+            overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
+            riskFinance = riskAssessment.get_success_attribute(RiskAssessment.KEY_FINANCE)
+            riskCode = riskAssessment.get_success_attribute(RiskAssessment.KEY_CODE)
+            riskTeam = riskAssessment.get_success_attribute(RiskAssessment.KEY_TEAM)
+            riskManagement = riskAssessment.get_success_attribute(RiskAssessment.KEY_MANAGEMENT)
+            riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
+            new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
+            db.session.add(new_table)
+            db.session.commit()
         else:
-            pass # unknown
+            None
 
     return render_template("view.html", projectName=projectName, finished=finished)
 
@@ -198,18 +223,11 @@ def suggestions():
 
     risk = Risk.query.filter_by(projectID = pID).order_by(Risk.date.desc()).first()
 
-    riskFinance = 0
-    riskCode = 0
-    riskManagement = 0
-    riskTimescale = 0
-    riskTeam = 0
-
-    if risk:
-        riskFinance = risk.riskFinance
-        riskCode = risk.riskCode
-        riskManagement = risk.riskManagement
-        riskTimescale = risk.riskTimescale
-        riskTeam = risk.riskTeam
+    riskFinance = risk.riskFinance
+    riskCode = risk.riskCode
+    riskManagement = risk.riskManagement
+    riskTimescale = risk.riskTimescale
+    riskTeam = risk.riskTeam
 
     suggestions = suggSys(riskFinance, riskTimescale, riskCode, riskTeam, riskManagement)
 
