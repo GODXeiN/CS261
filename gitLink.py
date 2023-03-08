@@ -49,7 +49,7 @@ class Git_Link:
     #Number of Bugs marked as open
     def getOpenBugCount(self):
         if self.repo is None:
-            return -1
+            return 0
         bugs = self.repo.get_issues(state='open',labels=[self.repo.get_label('bug')])
         count = 0
         for bug in bugs:
@@ -59,7 +59,7 @@ class Git_Link:
     #Number of Bugs marked as resolved
     def getClosedBugCount(self):
         if self.repo is None:
-            return -1
+            return 0
         bugs = self.repo.get_issues(state='closed',labels=[self.repo.get_label('bug')])
         count = 0
         for bug in bugs:
@@ -69,13 +69,13 @@ class Git_Link:
     #Number of total Bugs over the project lifespan
     def getTotalBugCount(self):
         if self.repo is None:
-            return -1
+            return 0
         return self.getOpenBugCount() + self.getClosedBugCount()
 
     #Number of commits over project lifespan
     def getTotalCommits(self):
         if self.repo is None:
-            return -1
+            return 0
         commits = self.repo.get_commits()
         count = 0
         for commit in commits:
@@ -85,46 +85,13 @@ class Git_Link:
     #Ratio of closed Bugs to total Bugs
     def getDefectFixRate(self):
         if self.repo is None:
-            return -1
+            return 0
         #potential to divide by 0
         try:
             rate = self.getClosedBugCount()/self.getTotalBugCount()
         except:
             rate = 0
         return rate
-
-
-
-# def main(): 
-#     gl = Git_Link("","")
-
-#     # validToken = False
-#     # while not validToken:
-#     #     print("Please enter a valid token:")
-#     #     token = input()
-#     #     if gl.checkToken(token):
-#     #         validToken = True
-#     token = 'token'
-
-#     # validURL = False
-#     # while not validURL:
-#     #     print("Please enter a valid URL:")
-#     #     print(gl.getRepoList(token))
-#     #     url = input()
-#     #     if gl.checkURL(token,url):
-#     #         validURL = True
-
-#     url = 'ZekromMarkII/FEH-Discord-Bot'
-    
-#     gitLink = Git_Link(token,url)
-
-#     print(gitLink.getTotalBugCount())
-#     print(gitLink.getClosedBugCount())
-#     print(gitLink.getOpenBugCount())
-#     print(gitLink.getDefectFixRate())
-#     print(gitLink.getTotalCommits())
-
-# main()
     
 
 
