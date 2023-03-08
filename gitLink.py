@@ -90,7 +90,7 @@ class Git_Link:
         try:
             rate = self.getClosedBugCount()/self.getTotalBugCount()
         except:
-            rate = 1
+            rate = 0
         return rate
 
 
