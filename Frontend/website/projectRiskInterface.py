@@ -1,10 +1,12 @@
+from __future__ import print_function # In python 2.7
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response
-from ...model import RiskAssessmentGenerator
+from .model import RiskAssessmentGenerator as RAG
 import pandas as pd
-from ...model import projectDf as SimProject
-from ...model.dataManipulation import calc_ratio_safe
-from ....gitLink import Git_Link as GitLinkObj
+from .model import projectDf as SimProject
+from .model.dataManipulation import calc_ratio_safe
+from .gitLink import Git_Link as GitLinkObj
 from sqlalchemy import func
+import sys
 import time
 
 # Acts as an intermediate step between the website and the RiskAssessmentGenerator by 
@@ -20,7 +22,7 @@ SOFT_METRIC_DEFAULT = 3.0
 class ProjectRiskInterface:
 
     def __init__(self):
-        self.rag = RiskAssessmentGenerator()
+        self.rag = RAG.RiskAssessmentGenerator()
 
     def get_risk_assessment(self, prjID):
         project = Project.query.filter_by(projectID = prjID).first()
@@ -58,14 +60,14 @@ class ProjectRiskInterface:
 
         ## SUBDEADLINES
         # Get the number of this project's deadlines which are marked as "SUCCESS"
-        metDeadlines = Deadline.query.filter_by(projectID = prjID, status=1).count()
+        metDeadlines = Deadline.query.filter_by(projectID = prjID, achieved=1).count()
         # Get the number of deadlines for this project
-        allDeadlines = Deadline.query.filter_by(projectID = prjID).count()
+        final = Deadline.query.filter(Deadline.achieved >= 1, Deadline.projectID == prjID).count()
 
-        if metDeadlines == None or allDeadlines == None:
+        if metDeadlines == None or final == None:
             proportionSubdeadlinesMet = 0.0
         else:
-            proportionSubdeadlinesMet = calc_ratio_safe(metDeadlines, allDeadlines)
+            proportionSubdeadlinesMet = calc_ratio_safe(metDeadlines, final)
 
 
         ## SOFT METRICS
@@ -82,18 +84,13 @@ class ProjectRiskInterface:
         # Find the interval over which the surveys will be averaged (i.e. the last week)
         endWindow = int(time.time())
         startWindow = endWindow - week
-        surveyAvgs = Survey_Response.query.with_entities(\
-                                           func.avg(Survey_Response.communicationMetric).label("avg_communication"),\
-                                           func.avg(Survey_Response.managementMetric).label("avg_support"),\
-                                           func.avg(Survey_Response.commitmentMetric).label("avg_commitment"),\
-                                           func.avg(Survey_Response.happinessMetric).label("avg_morale"))\
-                                            .filter_by(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow)
-        teamCommunication = surveyAvgs.avg_communication
-        teamMorale = surveyAvgs.avg_morale
-        teamCommitment = surveyAvgs.avg_commitment
-        teamSupport = surveyAvgs.avg_support
-        projectPlanning = Worker.query.with_entities(func.avg(Worker.planning).label("avg_planning"))\
-                                .join(Works_On).filter_by(Works_On.projectID == prjID).scalar()
+        avgCommunication = Survey_Response.query.with_entities(func.avg(Survey_Response.communicationMetric).label("avg_communication")).filter(Survey_Response.projectID == prjID, Survey_Response.date >= startWindow).all()
+        print(avgCommunication, file=sys.stderr)
+        teamCommunication = avgCommunication
+        teamMorale = avgCommunication
+        teamCommitment = avgCommunication
+        teamSupport = avgCommunication
+        projectPlanning = Worker.query.with_entities(func.avg(Worker.planning).label("avg_planning")).join(Works_On).filter(Works_On.projectID == prjID).scalar()
         
         if teamCommunication == None or teamCommunication == 0.0:
             teamCommunication = SOFT_METRIC_DEFAULT
@@ -112,7 +109,7 @@ class ProjectRiskInterface:
 
         ## TEAM EXPERIENCE/SIZE
         avgTeamRank = Worker.query.with_entities(func.avg(Worker.experienceRank).label("avg_rank"))\
-                                    .join(Works_On).filter_by(Works_On.projectID = prjID).scalar()
+                                    .join(Works_On).filter_by(projectID = prjID).scalar()
         teamSize = Works_On.query.filter_by(projectID = prjID).count()
 
         # Must set a default value of 1 or more team members
@@ -120,6 +117,8 @@ class ProjectRiskInterface:
             teamSize = 1
             avgTeamRank = 1.0
 
+        if avgTeamRank is None:
+            avgTeamRank = 0.0
 
         # Construct a dictionary of the project values (so they can be converted to a Pandas series)
         projectStateDict = {}
@@ -128,19 +127,18 @@ class ProjectRiskInterface:
         projectStateDict[SimProject.KEY_OVERALL_DEADLINE] = currDeadline
         projectStateDict[SimProject.KEY_TIME_ELAPSED] = timeElapsed
         projectStateDict[SimProject.KEY_BUDGET_ELAPSED] = budgetElapsed
-        projectStateDict[SimProject.KEY_OVERALL_DEADLINE] = currDeadline
-        projectStateDict[SimProject.KEY_COMMITS] = numCommits
+        projectStateDict[SimProject.KEY_CODE_COMMITS] = numCommits
         projectStateDict[SimProject.KEY_CODE_BUGS_RESOLUTION] = defectFixRate
         projectStateDict[SimProject.KEY_SUBDEADLINES_MET_PROPORTION] = proportionSubdeadlinesMet
         projectStateDict[SimProject.KEY_TEAM_AVG_RANK] = avgTeamRank
         projectStateDict[SimProject.KEY_TEAM_SIZE] = teamSize
 
         ## Add the soft metrics here
-        projectStateDict[SimProject.KEY_MET_COMMUNICATION] = teamCommunication
-        projectStateDict[SimProject.KEY_MET_MORALE] = teamMorale
-        projectStateDict[SimProject.KEY_MET_COMMITMENT] = teamCommitment
-        projectStateDict[SimProject.KEY_MET_SUPPORT] = teamSupport
-        projectStateDict[SimProject.KEY_MET_PLANNING] = projectPlanning
+        projectStateDict[SimProject.KEY_MET_COMMUNICATION] = 0 #teamCommunication
+        projectStateDict[SimProject.KEY_MET_MORALE] = 0 #teamMorale
+        projectStateDict[SimProject.KEY_MET_COMMITMENT] = 0 #teamCommitment
+        projectStateDict[SimProject.KEY_MET_SUPPORT] = 0 #teamSupport
+        projectStateDict[SimProject.KEY_MET_PLANNING] = 0 #projectPlanning
 
         projectState = pd.Series(projectStateDict)
 

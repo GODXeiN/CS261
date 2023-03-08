@@ -5,6 +5,9 @@ from . import db, app
 from datetime import datetime, timedelta
 from flask_mail import Mail, Message
 from .suggestionSys import suggSys
+from . import projectRiskInterface as PRI
+from .model import RiskAssessment
+
 import atexit
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -169,7 +172,9 @@ def view():
                         mail.send(msg)
 
         elif request.form['submit_button'] == 'Calculate Risk':
-            pass # do something else
+            pri = PRI.ProjectRiskInterface()
+            riskAssessment = pri.get_risk_assessment(pID)
+            values = riskAssessment.successValues
         else:
             pass # unknown
 
