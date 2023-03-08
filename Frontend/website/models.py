@@ -154,16 +154,14 @@ class End_Result(db.Model):
     managementMetric = db.Column(db.Integer)
     teamMetric = db.Column(db.Integer)
     codeMetric = db.Column(db.Integer)
-    success = db.Column(db.Integer)
 
-    def __init__(self, projectID, financeMetric, timescaleMetric, managementMetric, teamMetric, codeMetric, success):
+    def __init__(self, projectID, financeMetric, timescaleMetric, managementMetric, teamMetric, codeMetric):
         self.projectID = projectID
         self.financeMetric = financeMetric
         self.timescaleMetric = timescaleMetric
         self.managementMetric = managementMetric
         self.teamMetric = teamMetric
         self.codeMetric = codeMetric
-        self.success = success
 
 def init_db():
     db.create_all()
