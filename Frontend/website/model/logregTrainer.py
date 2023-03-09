@@ -14,11 +14,13 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from .projectDf import independent_headers
+from projectDf import independent_headers
 from joblib import dump
 
+CSV_TRAINING_DATA = "./data/trainDataStaged.csv"
+
 # Directory to which models are dumped
-TRAINED_MODEL_DIR = "C:/Users/Cem/Documents/CS261-main/Frontend/website/model/trained/"
+TRAINED_MODEL_DIR = "./trained/"
 
 # The file to which the trained model will be saved
 OVERALL_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'overallSuccessModel.joblib', TRAINED_MODEL_DIR + 'overallSuccessAccuracy.csv')
@@ -105,11 +107,9 @@ def train_model_and_dump(indep_headers, dep_header, model_save_dest, model_accur
 
 # Run only if this file is called directly
 if __name__ == "__main__":
-    csvdata = "./data/trainDataStaged.csv"
-
     # Open the project training/test data
-    df = pd.read_csv(csvdata)
-    print("Loaded Training File:", csvdata)
+    df = pd.read_csv(CSV_TRAINING_DATA)
+    print("Loaded Training File:", CSV_TRAINING_DATA)
 
     # Dependent field; the field we want to model to predict
     target_attr = 'Success'
