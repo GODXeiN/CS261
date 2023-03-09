@@ -49,8 +49,8 @@ class visualise():
         if len(yMin) < slices:
             for i in range(0,slices - len(yMin)):
                 yMin.append(0)
-        ax.plot(x, yMax, color='red')
-        ax.plot(x, yMin, color='blue')
+        ax.plot(x, yMax, color='red',label='Max risk')
+        ax.plot(x, yMin, color='blue',label='Min risk')
         ax.get_yaxis().get_major_formatter().set_useOffset(False)
         ax.get_yaxis().get_major_formatter().set_scientific(False)
         #plt.ticklabel_format(axis='y',useOffest=False,style='plain') 
@@ -61,6 +61,7 @@ class visualise():
         plt.xlabel('Date')
         plt.ylabel('Risk level')
         plt.tight_layout()
+        plt.legend(loc="upper left")
         plt.savefig(os.path.join(os.getcwd(),'website','static','risk.png'))
         plt.close(fig)
 
@@ -102,8 +103,8 @@ class visualise():
             for i in range(0,slices - len(yCost)):
                 yCost.append(yCost[-1])
                 yBudget.append(yBudget[-1])
-        ax.plot(x, yBudget, color='blue')
-        ax.plot(x,yCost, color='red')
+        ax.plot(x, yBudget, color='blue',label='budget')
+        ax.plot(x,yCost, color='red',label='cost')
         plt.xticks(rotation=90)
         ax.get_yaxis().get_major_formatter().set_useOffset(False)
         #Removes scienitifc notation
@@ -112,6 +113,7 @@ class visualise():
         plt.title("Budget analysis")
         plt.xlabel('Date')
         plt.ylabel('Budget')
+        plt.legend(loc="upper left")
         #plt.show()   
         plt.tight_layout()
         plt.savefig(os.path.join(os.getcwd(),'website','static','budget.png'))
