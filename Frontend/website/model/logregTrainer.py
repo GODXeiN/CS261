@@ -16,7 +16,7 @@ from sklearn.preprocessing import StandardScaler
 
 from .projectDf import independent_headers
 from joblib import dump
-from os import getcwd
+import os
 
 
 CSV_TRAINING_DATA = os.path.join(os.getcwd(),'website','model','data','trainDataStaged.csv')

@@ -8,7 +8,9 @@ from flask_mail import Mail, Message
 from .suggestionSys import suggSys
 from . import projectRiskInterface as PRI
 from .model import RiskAssessment
+from .visualise import visualise 
 import sys
+
 
 import atexit
 
@@ -198,6 +200,9 @@ def view():
             riskManagement = riskAssessment.get_success_attribute(RiskAssessment.KEY_MANAGEMENT)
             riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
             new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
+            vis = visualise(pID)
+            vis.overallRisk()
+            vis.budget()
             db.session.add(new_table)
             db.session.commit()
         else:
@@ -558,8 +563,12 @@ def project_details():
             db.session.commit()
             token=git_token
             url=git_link
+        elif git_link != '' and git_token != '':
+            
+            flash("Warning! Could not configure git settings. Ensure that you have entered both the link and the token", category='warning')
         else:
             flash("Warning! Could not configure git settings. Ensure that you have entered both the link and the token", category='warning')
+            
 
         # if int_deadline:
         #     if int_date:
