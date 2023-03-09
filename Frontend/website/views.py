@@ -159,7 +159,9 @@ def view():
 
     existingRisk = Risk.query.filter_by(projectID = pID).first()
 
-    if not existingRisk:
+    print(existingRisk, file=sys.stderr)
+
+    if existingRisk is None:
         pri = PRI.ProjectRiskInterface()
         riskAssessment = pri.get_risk_assessment(pID)
         overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
@@ -170,6 +172,7 @@ def view():
         riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
         new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
         db.session.add(new_table)
+        lastRisk.dateLastRiskCalculation = today_unix
         db.session.commit()
 
     if request.method == 'POST':
@@ -193,6 +196,7 @@ def view():
         elif request.form['submit_button'] == 'Calculate Risk':
             pri = PRI.ProjectRiskInterface()
             riskAssessment = pri.get_risk_assessment(pID)
+            lastRisk = Project.query.filter_by(projectID=pID).first()
             overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
             riskFinance = riskAssessment.get_success_attribute(RiskAssessment.KEY_FINANCE)
             riskCode = riskAssessment.get_success_attribute(RiskAssessment.KEY_CODE)
@@ -204,6 +208,7 @@ def view():
             vis.overallRisk()
             vis.budget()
             db.session.add(new_table)
+            lastRisk.dateLastRiskCalculation = today_unix
             db.session.commit()
         else:
             None

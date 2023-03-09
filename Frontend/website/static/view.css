@@ -41,3 +41,11 @@ hr {
     clear: both;
     visibility: hidden;
 }
+img {
+    width: 120%; /* takes the 100 % width of its container (.box div)*/
+    height: 120%; /* takes the 100 % height of its container (.box div)*/
+    display:block;
+}
+ul {
+    list-style-type: none;
+}
