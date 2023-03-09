@@ -16,11 +16,13 @@ from sklearn.preprocessing import StandardScaler
 
 from projectDf import independent_headers
 from joblib import dump
+from os import getcwd
 
-CSV_TRAINING_DATA = "./data/trainDataStaged.csv"
+
+CSV_TRAINING_DATA = getcwd() + "/data/trainDataStaged.csv"
 
 # Directory to which models are dumped
-TRAINED_MODEL_DIR = "./trained/"
+TRAINED_MODEL_DIR = getcwd() + "/trained/"
 
 # The file to which the trained model will be saved
 OVERALL_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'overallSuccessModel.joblib', TRAINED_MODEL_DIR + 'overallSuccessAccuracy.csv')
