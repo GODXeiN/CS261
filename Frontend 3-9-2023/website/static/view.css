@@ -1,0 +1,43 @@
+.navbar-expand-md .navbar-nav .nav-link {
+    padding-right: initial;
+}
+.brand {
+    position: absolute;
+    left: 50%;
+    margin-left: -65px !important;  /* 50% of your logo width */
+    display: block;
+}
+.confirm>button{
+    background: #0D6EFD;
+    color:  white;
+    border-color:  #0D6EFD;
+}
+.confirm>button:hover{
+    background-color:  #97cba9;
+    border-color:  #97cba9;
+}
+.side>button{
+    background: #6C757D;
+    color: white;
+    border-color: #6C757D;
+}
+.side>button:hover{
+    background-color:  #0D6EFD;
+    border-color:#0D6EFD;
+}
+.selected>button{
+    background: #0D6EFD;
+    color:  white;
+    border-color:  #0D6EFD;
+}
+.selected>button:hover{
+    background: #0D6EFD;
+    border-color:  #0D6EFD;
+}
+.fixnav {
+    overflow-y: auto;
+}
+hr {
+    clear: both;
+    visibility: hidden;
+}
