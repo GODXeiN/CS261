@@ -19,18 +19,18 @@ from joblib import dump
 from os import getcwd
 
 
-CSV_TRAINING_DATA = getcwd() + "/data/trainDataStaged.csv"
+CSV_TRAINING_DATA = os.path.join(os.getcwd(),'website','model','data','trainDataStaged.csv')
 
 # Directory to which models are dumped
-TRAINED_MODEL_DIR = getcwd() + "/trained/"
+TRAINED_MODEL_DIR = os.path.join(os.getcwd(),'website','model','trained')
 
 # The file to which the trained model will be saved
-OVERALL_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'overallSuccessModel.joblib', TRAINED_MODEL_DIR + 'overallSuccessAccuracy.csv')
-FINANCE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'financeModel.joblib', TRAINED_MODEL_DIR + 'financeAccuracy.csv')
-CODE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'codeModel.joblib', TRAINED_MODEL_DIR + 'codeAccuracy.csv')
-TIMESCALE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'timescaleModel.joblib', TRAINED_MODEL_DIR + 'timescaleAccuracy.csv')
-TEAM_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'teamModel.joblib', TRAINED_MODEL_DIR + 'teamAccuracy.csv')
-MANAGEMENT_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + 'managementModel.joblib', TRAINED_MODEL_DIR + 'managementAccuracy.csv')
+OVERALL_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/overallSuccessModel.joblib', TRAINED_MODEL_DIR + '/overallSuccessAccuracy.csv')
+FINANCE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/financeModel.joblib', TRAINED_MODEL_DIR + '/financeAccuracy.csv')
+CODE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/codeModel.joblib', TRAINED_MODEL_DIR + '/codeAccuracy.csv')
+TIMESCALE_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/timescaleModel.joblib', TRAINED_MODEL_DIR + '/timescaleAccuracy.csv')
+TEAM_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/teamModel.joblib', TRAINED_MODEL_DIR + '/teamAccuracy.csv')
+MANAGEMENT_MODEL_SAVE_DEST = (TRAINED_MODEL_DIR + '/managementModel.joblib', TRAINED_MODEL_DIR + '/managementAccuracy.csv')
 
 modelParams = [
     (independent_headers, 'Success', OVERALL_MODEL_SAVE_DEST),
