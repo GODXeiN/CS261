@@ -13,9 +13,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import PrecisionRecallDisplay
 
-from projectDf import KEY_ID
+from .projectDf import KEY_ID
 from joblib import dump
-from logregTrainer import modelParams, write_model_accuracy, CSV_TRAINING_DATA, TRAINED_MODEL_DIR
+from .logregTrainer import modelParams, write_model_accuracy, CSV_TRAINING_DATA, TRAINED_MODEL_DIR
 
 DISPLAY_PRECISION_RECALL = False
 

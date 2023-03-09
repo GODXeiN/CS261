@@ -3,8 +3,9 @@ import math
 import pandas as pd
 import numpy as np
 
-import SuccessReport
-from dataManipulation import calc_ratio_safe, exponential, sigmoid_func
+from .SuccessReport import SuccessReport
+
+from .dataManipulation import calc_ratio_safe, exponential, sigmoid_func
 
 ## Project-level metrics
 KEY_ID = 'pID'

@@ -14,7 +14,7 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from projectDf import independent_headers
+from .projectDf import independent_headers
 from joblib import dump
 from os import getcwd
 
