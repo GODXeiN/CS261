@@ -5,6 +5,10 @@ import numpy as np
 import os
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response, Risk
 import time
+import datetime
+import sys
+
+from matplotlib.ticker import ScalarFormatter
 
 slices = 10
 
@@ -23,16 +27,21 @@ class visualise():
         yMin = []
         totalTime = riskFirst.date
         for i in range(0,slices):
-            x.append(totalTime)
+            x.append(datetime.datetime.fromtimestamp(totalTime))
             totalTime += timeperiod
+        totalTime = riskFirst.date
+        
         for risk in risks:
-            if risk.date < riskFirst.date + timescale:
-                riskSlice.append(risk.riskLevel)
+            print(risk.riskLevel,file=sys.stderr)
+            riskSlice.append(risk.riskLevel)
+            if risk.date < totalTime + timeperiod:
+                print("risk")
             else:
-                timescale += timeperiod
+                totalTime += timeperiod
                 if len(riskSlice) > 0:
                     yMax.append(max(riskSlice))
                     yMin.append(min(riskSlice))
+                riskSlice = []
         fig, ax = plt.subplots()
         if len(yMax) < slices:
             for i in range(0,slices - len(yMax)):
@@ -40,10 +49,18 @@ class visualise():
         if len(yMin) < slices:
             for i in range(0,slices - len(yMin)):
                 yMin.append(0)
-        ax.plot(x, yMax)
-        ax.plot(x, yMin)
-
+        ax.plot(x, yMax, color='red')
+        ax.plot(x, yMin, color='blue')
+        ax.get_yaxis().get_major_formatter().set_useOffset(False)
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+        #plt.ticklabel_format(axis='y',useOffest=False,style='plain') 
+        plt.xticks(rotation=90)
         #plt.show()   
+        
+        plt.title("Risk analysis")
+        plt.xlabel('Date')
+        plt.ylabel('Risk level')
+        plt.tight_layout()
         plt.savefig(os.path.join(os.getcwd(),'website','static','risk.png'))
         plt.close(fig)
 
@@ -58,39 +75,44 @@ class visualise():
         x = []
         yCost = []
         yBudget = []
-        totalTime = metFirst.date
+        totalTime = metFirst.date + timeperiod
         for i in range(0,slices):
-            x.append(totalTime)
+            x.append(datetime.datetime.fromtimestamp(totalTime))
             totalTime += timeperiod
+        totalTime = metFirst.date
         for metric in metrics:
-            if metric.date < metFirst.date + timescale:
-                costSlice.append(metric.costToDate)
-                budgetSlice.append(metric.budget)
+            print(metric.costToDate, file=sys.stderr)
+            print(metric.date, file=sys.stderr)
+            print(totalTime, file=sys.stderr)
+            costSlice.append(metric.costToDate)
+            budgetSlice.append(metric.budget)
+            if metric.date < totalTime:
+                print("metric",file=sys.stderr)
+                
             else:
-                timescale += timeperiod
+                totalTime += timeperiod
                 if len(costSlice) > 0:
                     yCost.append(max(costSlice))
                 if len(budgetSlice) > 0:
-                    yBudget.append(min(budgetSlice))
+                    yBudget.append(max(budgetSlice))
+                costSlice = []
+                budgetSlice = []
         fig, ax = plt.subplots()
         if len(yCost) < slices:
             for i in range(0,slices - len(yCost)):
-                yCost.append(0)
-                yBudget.append(0)
-        ax.plot(x, yBudget)
-        ax.plot(x,yCost)
+                yCost.append(yCost[-1])
+                yBudget.append(yBudget[-1])
+        ax.plot(x, yBudget, color='blue')
+        ax.plot(x,yCost, color='red')
+        plt.xticks(rotation=90)
+        ax.get_yaxis().get_major_formatter().set_useOffset(False)
+        #Removes scienitifc notation
+        ax.get_yaxis().get_major_formatter().set_scientific(False)
+        #plt.ticklabel_format(useOffset=False)
+        plt.title("Budget analysis")
+        plt.xlabel('Date')
+        plt.ylabel('Budget')
         #plt.show()   
+        plt.tight_layout()
         plt.savefig(os.path.join(os.getcwd(),'website','static','budget.png'))
         plt.close(fig)
-
-    # def timeline(self):
-    #     #time.time() may not be unix time
-    #     deadlines = Deadline.query.filter_by(projectID = self.pID).filter_by(Deadline.deadlineDate > int(time.time())).order_by(Deadline.deadlineDate.asc())
-    #     lastDeadline = Deadline.query.filter_by(projectID = self.pID).filter_by(Deadline.deadlineDate > int(time.time())).order_by(Deadline.deadlineDate.desc()).first()
-    #     x = [int(time.time())]
-    #     y = []
-    #     for deadline in deadlines:
-    #         if not deadline.achieved:
-    #             x.append()
-
- 
