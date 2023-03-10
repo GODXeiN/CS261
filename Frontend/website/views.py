@@ -8,9 +8,10 @@ from flask_mail import Mail, Message
 from .suggestionSys import suggSys
 from . import projectRiskInterface as PRI
 from .model import RiskAssessment
-from .visualise import visualise 
 import sys
+from .visualise import visualise
 
+from .prepopDatabase import prepop
 
 import atexit
 
@@ -157,13 +158,12 @@ def view():
     pID = session['pID']
     projectName = Project.query.filter_by(projectID=pID).first().title
 
-    existingRisk = Risk.query.filter_by(projectID = pID).first()
-
-    print(existingRisk, file=sys.stderr)
-
-    if existingRisk is None:
+    existingRisk = Risk.query.filter_by(projectID = pID).order_by(Risk.date.desc()).first()
+    
+    if not existingRisk:
         pri = PRI.ProjectRiskInterface()
         riskAssessment = pri.get_risk_assessment(pID)
+        lastRisk = Project.query.filter_by(projectID=pID).first()
         overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
         riskFinance = riskAssessment.get_success_attribute(RiskAssessment.KEY_FINANCE)
         riskCode = riskAssessment.get_success_attribute(RiskAssessment.KEY_CODE)
@@ -171,10 +171,22 @@ def view():
         riskManagement = riskAssessment.get_success_attribute(RiskAssessment.KEY_MANAGEMENT)
         riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
         new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
-        db.session.add(new_table)
+        db.session.add(new_table)        
         lastRisk.dateLastRiskCalculation = today_unix
         db.session.commit()
-
+        existingRisk = Risk.query.filter_by(projectID = pID).first()
+        total= round(existingRisk.riskLevel*100,2)
+        finance = round(existingRisk.riskFinance*100,2)
+        code = round(existingRisk.riskCode*100,2)
+        team = round(existingRisk.riskTeam*100,2)
+        management = round(existingRisk.riskManagement*100,2)
+        time = round(existingRisk.riskTeam*100,2)
+        vis = visualise(pID)
+        vis.overallRisk()
+        vis.budget()
+    vis = visualise(pID)
+    vis.overallRisk()
+    vis.budget()
     if request.method == 'POST':
         devs = []
         if request.form['submit_button'] == 'Send Email':
@@ -196,7 +208,6 @@ def view():
         elif request.form['submit_button'] == 'Calculate Risk':
             pri = PRI.ProjectRiskInterface()
             riskAssessment = pri.get_risk_assessment(pID)
-            lastRisk = Project.query.filter_by(projectID=pID).first()
             overall = riskAssessment.get_success_attribute(RiskAssessment.KEY_OVERALL)
             riskFinance = riskAssessment.get_success_attribute(RiskAssessment.KEY_FINANCE)
             riskCode = riskAssessment.get_success_attribute(RiskAssessment.KEY_CODE)
@@ -204,16 +215,34 @@ def view():
             riskManagement = riskAssessment.get_success_attribute(RiskAssessment.KEY_MANAGEMENT)
             riskTime = riskAssessment.get_success_attribute(RiskAssessment.KEY_TIMESCALE)
             new_table = Risk(projectID = pID, date = today_unix, riskLevel =overall, riskFinance = riskFinance, riskCode=riskCode, riskTeam = riskTeam, riskManagement= riskManagement, riskTimescale=riskTime)
+            db.session.add(new_table)
+            lastRisk = Project.query.filter_by(projectID=pID).first()
+            lastRisk.dateLastRiskCalculation = today_unix
+            db.session.commit()
+            existingRisk=Risk.query.filter_by(projectID = pID).order_by(Risk.date.desc()).first()
+            total= round(existingRisk.riskLevel*100,2)
+            finance = round(existingRisk.riskFinance*100,2)
+            code = round(existingRisk.riskCode*100,2)
+            team = round(existingRisk.riskTeam*100,2)
+            management = round(existingRisk.riskManagement*100,2)
+            time = round(existingRisk.riskTeam*100,2)
             vis = visualise(pID)
             vis.overallRisk()
             vis.budget()
-            db.session.add(new_table)
-            lastRisk.dateLastRiskCalculation = today_unix
-            db.session.commit()
+            # mID = Project.query.filter_by(projectID=pID).first().managerID
+            # prep = prepop(mID)
+            # prep.populate()
+
         else:
             None
+    total= round(existingRisk.riskLevel*100,2)
+    finance = round(existingRisk.riskFinance*100,2)
+    code = round(existingRisk.riskCode*100,2)
+    team = round(existingRisk.riskTeam*100,2)
+    management = round(existingRisk.riskManagement*100,2)
+    time = round(existingRisk.riskTeam*100,2)
 
-    return render_template("view.html", projectName=projectName, finished=finished)
+    return render_template("view.html", projectName=projectName, finished=finished, total=total, finance=finance, code=code, team=team, management=management, time=time)
 
 @views.route('/faq')
 @login_required
@@ -242,9 +271,16 @@ def suggestions():
     suggestions = suggSys(riskFinance, riskTimescale, riskCode, riskTeam, riskManagement)
 
     projectName = Project.query.filter_by(projectID=pID).first().title
-
-    
-    return render_template("suggestions.html", projectName=projectName, budget=suggestions.getBudgetRisk(), code=suggestions.getCodeRisk(), management=suggestions.getManagementRisk(), timescale = suggestions.getTimeRisk(), team = suggestions.getTeamRisk())
+    riskList = [riskFinance,riskCode,riskManagement,riskTimescale,riskTeam]
+    colourList = []
+    for risk in riskList:
+        if risk < 0.3:
+            colourList.append("rgba(210, 0, 0, 0.6)")
+        elif risk < 0.5:
+            colourList.append("rgba(242, 216, 26, 0.6)")
+        else:
+            colourList.append("rgba(0, 128, 0, 0.6)")
+    return render_template("suggestions.html", projectName=projectName, budget=suggestions.getBudgetRisk(), code=suggestions.getCodeRisk(), management=suggestions.getManagementRisk(), timescale = suggestions.getTimeRisk(), team = suggestions.getTeamRisk(),colours=colourList)
 
 @views.route('/int_deadline', methods=['GET','POST'])
 @login_required
@@ -446,7 +482,6 @@ def project_details():
     
     budget=old_budget
     cost=old_cost
-    #here we must include the project-specific values. The following is generic as in project id is just 1
 
     if git:
         url = git.repositoryURL
@@ -460,8 +495,6 @@ def project_details():
         cost_to_date=request.form.get('cost_to_date')
         git_token=request.form.get('git_token')
         git_link=request.form.get('git_link')
-        int_deadline=request.form.get('int_deadline')
-        int_date=request.form.get('deadline')
 
         proj_id=project_details.get_id()
         today_unix=int(datetime.now().timestamp())        
@@ -477,8 +510,8 @@ def project_details():
             budget= new_hm.budget
             cost=hard_metrics.costToDate
             if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
+                excess=(cost-budget)/budget*100
+                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
         
         if new_budget and new_deadline and not cost_to_date:
             date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
@@ -489,20 +522,23 @@ def project_details():
             budget= new_hm.budget
             cost=hard_metrics.costToDate
             if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
+                excess=(cost-budget)/budget*100
+                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
             if old_deadline>unix_deadline:
                 flash('Warning. The updated deadline is earlier than the last one!', category='warning')
 
         if new_budget and not new_deadline and cost_to_date:
-            new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=new_budget, costToDate=cost_to_date, deadline=old_deadline, status=0)
-            db.session.add(new_hm)
-            db.session.commit()
-            budget= new_hm.budget
-            cost=new_hm.costToDate
-            if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
+            if int(cost_to_date)>old_cost:
+                new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=new_budget, costToDate=cost_to_date, deadline=old_deadline, status=0)
+                db.session.add(new_hm)
+                db.session.commit()
+                budget= new_hm.budget
+                cost=new_hm.costToDate
+                if budget<cost:
+                    excess=(cost-budget)/budget*100
+                    flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
+            else:
+                flash('The cost of the project cannot be less than before!', category='warning')
            
         if new_deadline and not cost_to_date and not new_budget:
             date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
@@ -514,42 +550,51 @@ def project_details():
                 flash('Warning. The updated deadline is earlier than the last one!', category='warning')
 
         if cost_to_date and not new_deadline and not new_budget:
-            new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=old_budget, costToDate=cost_to_date, deadline=old_deadline, status=0)
-            db.session.add(new_hm)
-            db.session.commit()
-            budget=hard_metrics.budget
-            cost=new_hm.costToDate
-            if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
-
+            if int(cost_to_date)>old_cost:
+                new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=old_budget, costToDate=cost_to_date, deadline=old_deadline, status=0)
+                db.session.add(new_hm)
+                db.session.commit()
+                budget=hard_metrics.budget
+                cost=new_hm.costToDate
+                if budget<cost:
+                    excess=(cost-budget)/budget*100
+                    flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
+            else:
+                flash('The cost of the project cannot be less than before!', category='warning')
         if not new_budget and new_deadline and cost_to_date:
-            date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
-            unix_deadline=int(date_time_obj.timestamp())
-            new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=old_budget, costToDate=cost_to_date, deadline=unix_deadline, status=0)
-            db.session.add(new_hm)
-            db.session.commit()
-            budget=hard_metrics.budget
-            cost=new_hm.costToDate
+            if int(cost_to_date)>old_cost:
+                date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
+                unix_deadline=int(date_time_obj.timestamp())
+                new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=old_budget, costToDate=cost_to_date, deadline=unix_deadline, status=0)
+                db.session.add(new_hm)
+                db.session.commit()
+                budget=hard_metrics.budget
+                cost=new_hm.costToDate
+                if budget<cost:
+                    excess=(cost-budget)/budget*100
+                    flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
+            else:
+                flash('The cost of the project cannot be less than before!', category='warning')
             
-            if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
+
 
         if new_budget and new_deadline and cost_to_date:
-            date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
-            unix_deadline=int(date_time_obj.timestamp())
-            new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=new_budget, costToDate=cost_to_date, deadline=unix_deadline, status=0)
-            db.session.add(new_hm)
-            db.session.commit()
-            budget=new_hm.budget
-            cost=new_hm.costToDate
-            
-            if budget<cost:
-                excess=(cost/budget)*100
-                flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,2)) + "%.", category='warning')
-            if old_deadline>unix_deadline:
-                flash('Warning. The updated deadline is earlier than the last one!', category='warning')
+            if int(cost_to_date)>old_cost:
+                date_time_obj = datetime.strptime(new_deadline, '%Y-%m-%d')
+                unix_deadline=int(date_time_obj.timestamp())
+                new_hm=Hard_Metrics(projectID=project_details.get_id(), date=today_unix, budget=new_budget, costToDate=cost_to_date, deadline=unix_deadline, status=0)
+                db.session.add(new_hm)
+                db.session.commit()
+                budget=new_hm.budget
+                cost=new_hm.costToDate
+                
+                if budget<cost:
+                    excess=(cost-budget)/budget*100
+                    flash("Warning! Your project's current cost exceeds the budget by " + str(round(excess,3)) + "%.", category='warning')
+                if old_deadline>unix_deadline:
+                    flash('Warning. The updated deadline is earlier than the last one!', category='warning')
+            else:
+                flash('The cost of the project cannot be less than before!', category='warning')            
 
         if git:
             if git_token:
@@ -568,27 +613,12 @@ def project_details():
             db.session.commit()
             token=git_token
             url=git_link
-        elif git_link != '' and git_token != '':
-            
-            flash("Warning! Could not configure git settings. Ensure that you have entered both the link and the token", category='warning')
         else:
             flash("Warning! Could not configure git settings. Ensure that you have entered both the link and the token", category='warning')
-            
-
-        # if int_deadline:
-        #     if int_date:
-        #         new_deadline=Deadline(projectID=pID,title=int_deadline,deadlineDate=int_date, achieved=0)
-        #         db.session.add(new_deadline)
-        #         db.session.commit()
-        #     else:
-        #         flash('You must add a deadline date alongside the title', category='error')
 
         if update_interval:
             project_details.updateInterval=update_interval
-            db.session.commit() 
-        
-        
-            
+            db.session.commit()        
 
     return render_template("project_details.html",project_details=project_details, budget=budget, cost=cost, token=token, url = url)
 

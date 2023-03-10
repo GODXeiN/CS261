@@ -1,6 +1,7 @@
 from . import models as DB
 from . import db
 from random import Random
+import random
 import pandas as pd
 from .projectRiskInterface import ProjectRiskInterface as PRI
 from .model.RiskAssessment import RiskAssessment as RA
@@ -60,7 +61,101 @@ class prepop():
         # deadline = db.Column(db.Integer)
         # status = db.Column(db.Integer)#0ong,1fin,2
 
-        # budget, cost, date, deadline, status
+ 
+
+        #email, experience, planning
+        workers = [('hector.ostia@gmail.com',2,4),
+                   ('lyndis.caelin@gmail.com',1,3),
+                   ('eliwood.pherae@gmail.com',4,4),
+                   ('sigurd.chalphy@gmail.com',5,4),
+                   ('quan.leonster@gmail.com',4,3),
+                   ('eldigan.nordion@gmail.com',4,5)]
+        #pID,wID,date,manage,commitment,communic,happiness
+        responses = [()]
+        survResponse = [(projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/07", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/14", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/21", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/01/28", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/04", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/11", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/18", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/02/25", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2),
+                        (projectID, "","2023/03/04", 1,2,1,2)
+        ]
+        workCount = 0
+        for (email,exp,plan) in workers:
+            
+            worker = DB.Worker(emailAddr=email,experienceRank=exp,planning=plan)
+            db.session.add(worker)
+            db.session.commit()
+            work = DB.Worker.query.filter_by(emailAddr = email).first()
+            workJoin = DB.Works_On(projectID=projectID,workerID=work.workerID)
+            db.session.add(workJoin)
+            db.session.commit()
+            print("Added worker",str((email,exp,plan)))
+            #Add wID
+            pointer = workCount
+            for i in range(0,9):
+                
+                pID, wID, date, man,commit,commun,happy = survResponse[pointer]
+                wID = work.workerID
+                man = random.randint(1,5)
+                commit = random.randint(1,5)
+                commun = random.randint(1,5)
+                happy = random.randint(1,5)
+                pointer += 6
+                surv = DB.Survey_Response(projectID= pID,workerID= wID,date= date,managementMetric= man,commitmentMetric=commit, communicationMetric=commun, happinessMetric=happy)
+                db.session.add(surv)
+                db.session.commit()
+                print("Added response",str((pID,wID,date,man,commit,commun,happy)))
+            workCount+1
+        
+               # budget, cost, date, deadline, status
         hm_rows = [(100000,  200, "2023/01/07", endDate, 0),
                 (100000, 4490, "2023/01/14", endDate, 0),
                 (100000, 7720, "2023/01/21", endDate, 0),

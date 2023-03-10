@@ -114,9 +114,10 @@ class Worker(db.Model):
     experienceRank = db.Column(db.Integer)
     planning = db.Column(db.Integer)
 
-    def __init__(self, emailAddr, experienceRank):
+    def __init__(self, emailAddr, experienceRank,planning):
         self.emailAddr = emailAddr
         self.experienceRank = experienceRank
+        self.planning = planning
 
 class Works_On(db.Model):
     __tablename__='Works_On'
@@ -141,7 +142,7 @@ class Survey_Response(db.Model):
         self.projectID = projectID
         self.workerID = workerID
         self.date = date
-        self.managementMetric = managementMetric
+        self.mmanagementMetric = managementMetric
         self.commitmentMetric = commitmentMetric
         self.communicationMetric = communicationMetric
         self.happinessMetric = happinessMetric
