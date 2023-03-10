@@ -2,7 +2,7 @@
 
 
 from joblib import load
-from projectDf import SimProject, independent_headers
+import projectDf as pdf
 
 import RiskAssessmentGenerator 
 
@@ -11,7 +11,7 @@ rag = RiskAssessmentGenerator.RiskAssessmentGenerator()
 print("Single Testing Model\n")
 
 # Creates an arbitrary project
-p = SimProject(10001, 10, 30, 10000, 200, 500)
+p = pdf.SimProject(10001, 10, 30, 10000, 200, 500)
 p.simulate()
 successRep = p.evaluate()
 print(str(successRep))

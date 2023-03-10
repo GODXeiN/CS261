@@ -6,16 +6,18 @@ import numpy as np
 from os.path import isdir
 from os import makedirs
 
-from sklearn.linear_model import LogisticRegression
+from sklearn import preprocessing
+from sklearn.linear_model import LogisticRegressionCV, LogisticRegression, SGDClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report, accuracy_score, mean_squared_error
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.model_selection import GroupKFold, StratifiedGroupKFold
 
-from projectDf import KEY_ID
+from projectDf import independent_headers, KEY_ID
 from joblib import dump
-from logregTrainer import modelParams, write_model_accuracy, CSV_TRAINING_DATA, TRAINED_MODEL_DIR
+import logregTrainer as Trainer
+
 
 
 def train_model_and_dump(independent_headers, dependent_header, model_save_dest, model_accuracy_dest):
@@ -56,7 +58,7 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
     print(classification_report(y_test, y_pred))
 
     # Export the trained model's accuracy (to evaluate likelihood of model's prediction being correct)
-    write_model_accuracy(y_test, y_pred, model_accuracy_dest)
+    Trainer.write_model_accuracy(y_test, y_pred, model_accuracy_dest)
 
     # Export the trained model to be loaded by other modules
     dump(bestEstimator, model_save_dest)
@@ -64,16 +66,18 @@ def train_model_and_dump(independent_headers, dependent_header, model_save_dest,
 
 
 if __name__ == '__main__':
+    csvdata = "./data/trainDataStaged.csv"
+
     # Open the project training/test data
-    df = pd.read_csv(CSV_TRAINING_DATA)
-    print("Loaded Training File:", CSV_TRAINING_DATA)
+    df = pd.read_csv(csvdata)
+    print("Loaded Training File:", csvdata)
 
     # Dependent field; the field we want to model to predict
     target_attr = 'Success'
 
     # If the model target directory is not present, make it
-    if not isdir(TRAINED_MODEL_DIR):
-        makedirs(TRAINED_MODEL_DIR)
+    if not isdir(Trainer.TRAINED_MODEL_DIR):
+        makedirs(Trainer.TRAINED_MODEL_DIR)
 
     # Identify the groups (projects) from which each sample belongs
     projectGroups = np.array(df[KEY_ID])
@@ -81,7 +85,7 @@ if __name__ == '__main__':
 
     # Train a model for each of the identified target parameters, 
     # dumping the trained model to the given destination file
-    for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in modelParams:
+    for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in Trainer.modelParams:
         print("Training on dependent variable \'" + dep_hdr + "\'")
         train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
 

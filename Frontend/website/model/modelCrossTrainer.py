@@ -13,16 +13,18 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GroupKFold
 from sklearn.metrics import PrecisionRecallDisplay
 
-from .projectDf import KEY_ID
+from projectDf import KEY_ID
 from joblib import dump
-from .logregTrainer import modelParams, write_model_accuracy, CSV_TRAINING_DATA, TRAINED_MODEL_DIR
+from logregTrainer import modelParams, TRAINED_MODEL_DIR, write_model_accuracy
+
 
 DISPLAY_PRECISION_RECALL = False
+
 
 # Creates a Pipeline model (with data standardisation) and trains it with CrossValidation to 
 # recognise the columns given by independent_headers and predict the column 'dependent_header'. 
 # Then, exports the trained model and its accuracy score to the given destination files.
-def train_model_and_dump(df, independent_headers, dependent_header, model_save_dest, model_accuracy_dest, gkf, projectGroups):
+def train_model_and_dump(independent_headers, dependent_header, model_save_dest, model_accuracy_dest):
     # Get the independent data as a matrix
     x = np.array(df[independent_headers])
     y = np.array(df[dependent_header])
@@ -78,10 +80,15 @@ def train_model_and_dump(df, independent_headers, dependent_header, model_save_d
         plt.show()
 
 
-def train_all_models():
+if __name__ == '__main__':
+    csvdata = "./data/trainDataStaged.csv"
+
     # Open the project training/test data
-    df = pd.read_csv(CSV_TRAINING_DATA)
-    print("Loaded Training File:", CSV_TRAINING_DATA)
+    df = pd.read_csv(csvdata)
+    print("Loaded Training File:", csvdata)
+
+    # Dependent field; the field we want to model to predict
+    target_attr = 'Success'
 
     # If the model target directory is not present, make it
     if not isdir(TRAINED_MODEL_DIR):
@@ -98,12 +105,5 @@ def train_all_models():
     # dumping the trained model to the given destination file
     for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in modelParams:
         print("Training on dependent variable \'" + dep_hdr + "\'")
-        train_model_and_dump(df, indep_hdrs, dep_hdr, save_dest, accuracy_dest, gkf, projectGroups)
-
-
-
-
-if __name__ == '__main__':
-    train_all_models()
-   
+        train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
 

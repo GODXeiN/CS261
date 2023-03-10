@@ -7,6 +7,8 @@ import numpy as np
 from os.path import isdir
 from os import makedirs
 
+import os
+
 from sklearn import preprocessing
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -16,8 +18,6 @@ from sklearn.preprocessing import StandardScaler
 
 from .projectDf import independent_headers
 from joblib import dump
-import os
-
 
 CSV_TRAINING_DATA = os.path.join(os.getcwd(),'website','model','data','trainDataStaged.csv')
 
@@ -109,9 +109,11 @@ def train_model_and_dump(indep_headers, dep_header, model_save_dest, model_accur
 
 # Run only if this file is called directly
 if __name__ == "__main__":
+    csvdata = "./data/trainDataStaged.csv"
+
     # Open the project training/test data
-    df = pd.read_csv(CSV_TRAINING_DATA)
-    print("Loaded Training File:", CSV_TRAINING_DATA)
+    df = pd.read_csv(csvdata)
+    print("Loaded Training File:", csvdata)
 
     # Dependent field; the field we want to model to predict
     target_attr = 'Success'

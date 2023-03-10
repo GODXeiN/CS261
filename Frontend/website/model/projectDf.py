@@ -3,8 +3,7 @@ import math
 import pandas as pd
 import numpy as np
 
-from .SuccessReport import SuccessReport
-
+from . import SuccessReport
 from .dataManipulation import calc_ratio_safe, exponential, sigmoid_func
 
 ## Project-level metrics
@@ -756,15 +755,12 @@ class SimProject:
         binarySuccesses = successReport.get_binary_successes()
 
         # Insert each success value as a new column in the sampled data-points
-        for (key, binSuccess) in binarySuccesses.items():
-            sampleDf.insert(len(sampleDf.columns), key, binSuccess)
-
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_FINANCE, binarySuccesses[SuccessReport.KEY_FINANCE])
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_TIMESCALE, binarySuccesses[SuccessReport.KEY_TIMESCALE])
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_TEAM, binarySuccesses[SuccessReport.KEY_TEAM])
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_MANAGEMENT, binarySuccesses[SuccessReport.KEY_MANAGEMENT])
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_CODE, binarySuccesses[SuccessReport.KEY_CODE])
-        # sampleDf.insert(len(sampleDf.columns), SuccessReport.KEY_OVERALL, binarySuccesses[SuccessReport.KEY_OVERALL])
+        sampleDf.insert(len(sampleDf.columns), 'Finance Success', binarySuccesses[SuccessReport.KEY_FINANCE])
+        sampleDf.insert(len(sampleDf.columns), 'Timescale Success', binarySuccesses[SuccessReport.KEY_TIMESCALE])
+        sampleDf.insert(len(sampleDf.columns), 'Team Success', binarySuccesses[SuccessReport.KEY_TEAM])
+        sampleDf.insert(len(sampleDf.columns), 'Management Success', binarySuccesses[SuccessReport.KEY_MANAGEMENT])
+        sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
+        sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL])
 
         # Remove the team ranks
         return sampleDf
