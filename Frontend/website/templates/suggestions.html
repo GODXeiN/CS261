@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <title>Suggestions Page</title>
+        <link rel="icon" href="static/logo.png">
+        <title>Suggestions</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
         <link rel="stylesheet" href="static\suggestions.css"/>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
@@ -131,32 +132,32 @@
                 </li>
                 <li>
                     <div class="card border-secondary mb-3 mx-auto" style="max-width: 51rem;  min-width: 29rem;">
-                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseZero" aria-expanded="false" aria-controls="collapseZero" style="text-align: center;">Budget Risk</div>
+                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseZero" aria-expanded="false" aria-controls="collapseZero" style="text-align: center; background: {{colours[0]}}">Budget Risk</div>
                         <p class="card-text" id="collapseZero">{{budget}}</p>
                     </div>
                 </li>
                 <li>
                     <div class="card border-secondary mb-3 mx-auto" style="max-width: 51rem;  min-width: 29rem;">
-                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne" style="text-align: center;">Time Risk</div>
+                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne" style="text-align: center; background: {{colours[3]}}">Time Risk</div>
                         <p class="card-text" id="collapseOne">{{timescale}}</p>
                     </div>
                 </li>
                 <li>
                     <div class="card border-secondary mb-3 mx-auto" style="max-width: 51rem;  min-width: 29rem;">
-                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="text-align: center;">Code Risk</div>
+                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo" style="text-align: center; background: {{colours[1]}}">Code Risk</div>
                         <p class="card-text" id="collapseTwo">{{code}}</p>
                     </div>
                 </li>
                 <li>
                     <div class="card border-secondary mb-3 mx-auto" style="max-width: 51rem;  min-width: 29rem;">
-                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" style="text-align: center;">Team Risk</div>
+                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree" style="text-align: center; background: {{colours[4]}}">Team Risk</div>
                         <p class="card-text" id="collapseThree" >{{team}}</p>
                     </div>
                 </li>
                 <li>
                 <li>
                     <div class="card border-secondary mb-3 mx-auto" style="max-width: 51rem;  min-width: 29rem;">
-                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour" style="text-align: center;">Management Risk</div>
+                        <div class="card-header" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour" style="text-align: center;background: {{colours[2]}}">Management Risk</div>
                         <p class="card-text" id="collapseFour" >{{management}}</p>
                     </div>
                 </li>
