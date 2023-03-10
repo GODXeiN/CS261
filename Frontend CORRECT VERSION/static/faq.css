@@ -1,0 +1,17 @@
+.brand {
+    position: absolute;
+    left: 50%;
+    margin-left: -38px !important;  /* 50% of your logo width */
+    display: block;
+}
+
+.go_back{
+    position: absolute;
+    left: 50%;
+    margin-left: -38px;
+}
+
+.go_back a:hover .btn-primary{
+    background-color:  #97cba9;
+    border-color:  #97cba9;
+}
