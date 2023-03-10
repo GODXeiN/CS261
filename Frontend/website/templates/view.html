@@ -3,9 +3,10 @@
     <head>
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <title>View Page</title>
+        <link rel="icon" href="static/logo.png">
+        <title>View</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-        <link rel="stylesheet" href="static\view.css"/>
+        <link rel="stylesheet" href="static/view.css"/>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
@@ -64,7 +65,7 @@
         {% endif %}
     {% endwith %}
         <!-- https://www.youtube.com/watch?v=3GNBl-v-ZHI -->
-        <div class="container d-flex flex-column flex-md-row">
+        <div class="container d-flex flex-column flex-md-row" id="nav">
             <div class="fixnav">
                 <nav class="navbar navbar-expand-md navbar-light d-flex flex-md-column">
                     <button class="navbar-toggler"type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle Navigation">
@@ -122,17 +123,46 @@
                         </ul>
                     </div>
                 </nav>
-            </div>
-            <ul>
-                <li>
-                    <img src="static/budget.png">
-                </li>
-                <li>
-                    <img src="static/risk.png">
-                </li>
-            </ul>
+            </div>    
         </div>
-        <div class="d-flex justify-content-center confirm">
+            <div class="descriptionDiv">
+                <h3 style="color: #fff;">Chance Of Success</h3>
+                <div class="colourRisk" ><h2 style="color: #fff;">{{total}}%</h2></div>
+             
+            </div>
+            <br>
+            <br>
+        
+        <table class="table" style="width: 50%;">
+            <tr class="firstTR">
+                <th colspan="5" style="font-size: 20px;"><h4>Department Specific Risks</h4></th>
+            </tr>
+            <tr class="secondTR">
+                <th><h5>Finance</h5></th>
+                <th><h5>Code</h5></th>
+                <th><h5>Team</h5></th>
+                <th><h5>Management</h5></th>
+                <th><h5>Time</h5></th>
+            </tr>
+
+            <tr class="thirdTR">
+                <td><h6>{{finance}}%</h6></td>
+                <td><h6>{{code}}%</h6></td>
+                <td><h6>{{team}}%</h6></td>
+                <td><h6>{{management}}%</h6></td>
+                <td><h6>{{time}}%</h6></td>
+            </tr>
+        </table>
+        <br>
+        <div class="graph1">
+            <img src="static/risk.png">
+
+            <img src="static/budget.png">
+
+        </div>
+                
+                
+        <div class="d-flex justify-content-center confirm" id="buttons">
             {% if finished %}
             <form method="POST">
                 <input type="submit" class="btn btn-secondary btn-lg center button" name="submit_button" value="Calculate Risk">
@@ -140,5 +170,54 @@
             </form>
             {% endif %}
         </div>
+
+
+        <script>
+        function changeBorderColor() {
+            var divs = document.getElementsByClassName("colourRisk");
+            for(var i = 0; i< divs.length; i++){
+                var content = parseFloat(divs[i].querySelector("h2").textContent);
+                if (content >= 0 && content < 35) {
+                    divs[i].style.backgroundColor = 'rgba(210, 0, 0, 0.6)';
+                    divs[i].style.borderColor = "red"; 
+                } else if (content >= 35 && content < 65) {
+                    divs[i].style.backgroundColor = 'rgba(242, 216, 26, 0.6)';
+                    divs[i].style.borderColor = "yellow";
+                } else {
+                    divs[i].style.backgroundColor = 'rgba(0, 128, 0, 0.6)';
+                    divs[i].style.borderColor = "green";
+                    
+            }
+
+            }
+        
+        }
+
+        changeBorderColor();
+        </script>
+             <script>
+                function changeBorderColor() {
+                    const table = document.querySelector("table");
+                    const cells = table.getElementsByTagName("td");
+                    for(let i = 0; i< cells.length; i++){
+                        const content = parseFloat(cells[i].textContent);
+                        if (content >= 0 && content < 35) {
+                            cells[i].style.backgroundColor = 'rgba(210, 0, 0, 0.6)';
+                            cells[i].style.borderColor = "red";
+                        } else if (content >= 35 && content < 65) {
+                            cells[i].style.backgroundColor = 'rgba(255,255,0, 0.6)';
+                            cells[i].style.borderColor = "yellow";
+                        } else {
+                            cells[i].style.backgroundColor = 'rgba(0, 128, 0, 0.6)';
+                            cells[i].style.borderColor = "green";
+                            
+                    }
+        
+                    }
+                
+                }
+        
+                changeBorderColor();
+                </script>
     </body>
 </html>
