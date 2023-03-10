@@ -754,13 +754,16 @@ class SimProject:
         # Binarize each success value to 0 or 1
         binarySuccesses = successReport.get_binary_successes()
 
+        for (key, binSuccess) in binarySuccesses.items():
+            sampleDf.insert(len(sampleDf.columns), key, binSuccess)
+
         # Insert each success value as a new column in the sampled data-points
-        sampleDf.insert(len(sampleDf.columns), 'Finance Success', binarySuccesses[SuccessReport.KEY_FINANCE])
-        sampleDf.insert(len(sampleDf.columns), 'Timescale Success', binarySuccesses[SuccessReport.KEY_TIMESCALE])
-        sampleDf.insert(len(sampleDf.columns), 'Team Success', binarySuccesses[SuccessReport.KEY_TEAM])
-        sampleDf.insert(len(sampleDf.columns), 'Management Success', binarySuccesses[SuccessReport.KEY_MANAGEMENT])
-        sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
-        sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL])
+        # sampleDf.insert(len(sampleDf.columns), 'Finance Success', binarySuccesses[SuccessReport.KEY_FINANCE])
+        # sampleDf.insert(len(sampleDf.columns), 'Timescale Success', binarySuccesses[SuccessReport.KEY_TIMESCALE])
+        # sampleDf.insert(len(sampleDf.columns), 'Team Success', binarySuccesses[SuccessReport.KEY_TEAM])
+        # sampleDf.insert(len(sampleDf.columns), 'Management Success', binarySuccesses[SuccessReport.KEY_MANAGEMENT])
+        # sampleDf.insert(len(sampleDf.columns), 'Code Success', binarySuccesses[SuccessReport.KEY_CODE])
+        # sampleDf.insert(len(sampleDf.columns), 'Success', binarySuccesses[SuccessReport.KEY_OVERALL])
 
         # Remove the team ranks
         return sampleDf

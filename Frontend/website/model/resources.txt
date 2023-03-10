@@ -5,20 +5,11 @@
     # Explanation of Logistic Regression + basic tutorial
     https://www.datacamp.com/tutorial/understanding-logistic-regression-python
 
-    # Tutorial for Sklearn for classification models (basis for most of the code)
+    # Tutorial for Sklearn for classification models
     https://towardsdatascience.com/building-classification-models-with-sklearn-6a8fd107f0c1
 
     # Numpy + Sklearn
     https://medium.com/personal-project/numpy-pandas-and-scikit-learn-explained-e7336baecedc
-
-    # Imputation for filling-in missing values in data-set
-    https://scikit-learn.org/stable/modules/impute.html
-
-    # Mean-Squared-error for evaluating regression models
-    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_error.html
-
-    # Nearest-Neighbours Regression model for continuous output data
-    https://scikit-learn.org/stable/modules/neighbors.html
 
 
 # DATA GENERATION
@@ -43,6 +34,6 @@
         # For inactive projects, this ratio decreases over time
     https://www.academia.edu/36780849/The_empirical_commit_frequency_distribution_of_open_source_projects
 
-    "Defect Density: 1/1000 lines of code"
-    Not always full picture; requires defects to be known
+    # "Defect Density: 1/1000 lines of code"
+        # Not always full picture; requires defects to be known
     https://www.sealights.io/code-quality/defect-density-context-is-king/

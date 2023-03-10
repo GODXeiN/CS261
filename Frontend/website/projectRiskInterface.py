@@ -1,9 +1,11 @@
 from __future__ import print_function # In python 2.7
 
-from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, Survey_Response
+from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response
 from .model import RiskAssessmentGenerator as RAG
 import pandas as pd
 from .model import projectDf as SimProject
+from .model.logregTrainer import CSV_TRAINING_DATA, train_all_models
+from .model import SuccessReport
 from .model.dataManipulation import calc_ratio_safe
 from .gitLink import Git_Link as GitLinkObj
 from sqlalchemy import func
@@ -26,6 +28,12 @@ class ProjectRiskInterface:
         self.rag = RAG.RiskAssessmentGenerator()
 
     def get_risk_assessment(self, prjID):
+        state = self.get_project_state(prjID)
+        return self.rag.generate_ra(state)
+
+
+    # Get the most-recent state for the project
+    def get_project_state(self, prjID):
         project = Project.query.filter_by(projectID = prjID).first()
 
         ## HARD METRICS
@@ -37,16 +45,18 @@ class ProjectRiskInterface:
 
         # Date of the most recent hard metric sample in UNIX time
         currDate = newestHM.date
-        currDeadline = newestHM.deadline
+        deadlineDate = newestHM.deadline
         startDate = project.dateCreated
         # Seconds since project started
         durationTS = currDate - startDate
+
+        secondsPerDay = 24 * 3600
         # Days since project started
-        durationDays = int(durationTS / (24 * 3600))
+        durationDays = int(durationTS / secondsPerDay)
         # Seconds for project deadline
-        deadlineTS =  currDeadline - startDate
+        deadlineTS =  deadlineDate - startDate
         # Days for project deadline
-        deadlineDays = int(deadlineTS / (24 * 3600))
+        deadlineDays = int(deadlineTS / secondsPerDay)
         # Calculate the proportion of the project time which has been used
         timeElapsed = calc_ratio_safe(durationDays, deadlineDays) 
 
@@ -79,7 +89,7 @@ class ProjectRiskInterface:
 
         ## SOFT METRICS
         # Seconds in a week
-        week = 7 * 24 * 60 * 60
+        week = 7 * secondsPerDay
         # Find the interval over which the surveys will be averaged (i.e. the last week)
         endWindow = int(time.time())
         startWindow = endWindow - week
@@ -131,9 +141,49 @@ class ProjectRiskInterface:
             SimProject.KEY_MET_PLANNING: projectPlanning
         }
 
-        print(projectStateDict, file=sys.stderr)
+        return pd.Series(projectStateDict)
+    
+        # Append the given state to the Model's training data in CSV format
+    def write_state_to_training_data(self, state):
+        targetFile = open(CSV_TRAINING_DATA, "a")
+        targetFile.write(state.to_csv(lineterminator='\n', header=False))
+        targetFile.close()
 
-        projectState = pd.Series(projectStateDict)
 
-        return self.rag.generate_ra(projectState)
+
+    # Given a completed project, evaluate its success and write that project to the end of the 
+    # Risk-Assessment-Model training data
+    def add_project_to_training_data(self, projectID):
+        STATUS_FINISHED = 1
+        STATUS_CANCELLED = 2 
+        status = Hard_Metrics.query(Hard_Metrics.status).filter_by(projectID = projectID).first()
+
+        # If project finished, mark as success
+        if status == STATUS_FINISHED:
+            succReport = SuccessReport()
+            finalSurveyResponse = End_Result.query.filter_by(projectID = projectID).first()
+
+            if finalSurveyResponse != None:
+                finance = finalSurveyResponse.financeMetric
+                code = finalSurveyResponse.codeMetric
+                timescale = finalSurveyResponse.timescaleMetric
+                management = finalSurveyResponse.managementMetric
+                team = finalSurveyResponse.teamMetric
+                succReport.set_success_values(finance, timescale, team, code, management)
+
+                projectState = self.get_project_state()
+                succReport.add_binary_to_state(projectState)
+
+                self.write_state_to_training_data(projectState)
+        # If project cancelled, mark as failure
+        elif status == STATUS_CANCELLED:
+            succReport = SuccessReport()
+            projectState = self.get_project_state()
+            succReport.add_binary_to_state(projectState)
+
+            self.write_state_to_training_data(projectState)
+
+
+    def retrain_model(self):
+        train_all_models()
 

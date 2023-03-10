@@ -1,7 +1,4 @@
-## Tests the Logistic Regression Model with a single project 
-
-
-from joblib import load
+## Tests the Risk-Assessment-Model with a single project 
 import projectDf as pdf
 
 import RiskAssessmentGenerator 
