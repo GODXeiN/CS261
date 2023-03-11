@@ -82,6 +82,14 @@ th{
     text-align: center;
     font-family: "Helvetica";
 }
+.descriptionDiv2{
+    border: solid;
+    background-color: #28242c;
+    border-radius: 8px;
+    margin-left: 18%;
+    height: 50%;
+    display: inline-block;
+}
 
 table{
     position: relative;
@@ -126,4 +134,13 @@ table{
 .graph1{
     position: absolute;
     left: 23%;
+}
+#outer
+{
+    width:100%;
+    text-align: center;
+}
+.inner
+{
+    display: inline-block;
 }

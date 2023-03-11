@@ -8,7 +8,9 @@ from flask_mail import Mail, Message
 from .suggestionSys import suggSys
 from . import projectRiskInterface as PRI
 from .model import RiskAssessment
+from fpdf import FPDF
 import sys
+import os
 from .visualise import visualise
 
 from .prepopDatabase import prepop
@@ -241,8 +243,46 @@ def view():
     team = round(existingRisk.riskTeam*100,2)
     management = round(existingRisk.riskManagement*100,2)
     time = round(existingRisk.riskTeam*100,2)
-
-    return render_template("view.html", projectName=projectName, finished=finished, total=total, finance=finance, code=code, team=team, management=management, time=time)
+    graphOne = os.path.join(os.getcwd(),'website','static')+'/risk.png'
+    graphTwo = os.path.join(os.getcwd(),'website','static')+'/budget.png'
+    logo = os.path.join(os.getcwd(),'website','static')+'/logo.png'
+    pdf = FPDF('P', 'mm', 'A4')
+    pdf.add_page()
+    pdf.set_font("Times", size=12)
+    pdf.line(30, 70, 210-30, 70)
+    pdf.line(30, 120, 210-30, 120)
+    pdf.cell(200, 10, txt="Group 17", ln=1, align="C")
+    pdf.set_font("Times", "B", size=26)
+    pdf.set_y(80)
+    pdf.cell(200, 10, txt="Results Report", ln=1, align="C")
+    pdf.set_font("Times", size=26)
+    pdf.set_y(95)
+    pdf.set_font("Times", size=20)
+    pdf.cell(200, 10, txt=f"Generated for the project {projectName}", ln=1, align="C")
+    pdf.image(logo, x = 73, y = 145, w = 70, h = 70)
+    pdf.set_font("Times", size=14)
+    pdf.set_y(265)
+    pdf.cell(200, 10, txt=f"Generated: {datetime.today().strftime('%Y-%m-%d')}", ln=1, align="C")
+    pdf.set_font("Times", size=12)
+    pdf.add_page()
+    pdf.image(graphOne, x = 20, y = None, w = 160, h = 120)
+    pdf.line(20, 140, 210-20, 140)
+    pdf.image(graphTwo, x = 20, y = 150, w = 160, h = 120)
+    pdf.add_page()
+    pdf.set_font("Times", size=20)
+    pdf.cell(200, 10, txt="Estimated Success", ln=1, align="C")
+    pdf.set_font("Times", size=12)
+    pdf.line(20, 90, 210-20, 90)
+    pdf.cell(200, 10, txt=f"Overall success: {total}%", ln=1, align="C")
+    pdf.cell(200, 10, txt=f"Financial success: {finance}%", ln=1, align="C")
+    pdf.cell(200, 10, txt=f"Code success: {code}%", ln=1, align="C")
+    pdf.cell(200, 10, txt=f"Team success: {team}%", ln=1, align="C")
+    pdf.cell(200, 10, txt=f"Time success: {time}%", ln=1, align="C")
+    pdf.cell(200, 10, txt=f"Management success: {management}%", ln=1, align="C")
+    pdf.set_y(90)
+    pdf.cell(200, 10, txt="##END_OF_REPORT##", ln=1, align="C")
+    pdf.output(os.getcwd() + f'/website/static/{projectName}_REPORT.pdf')
+    return render_template("view.html", projectName=projectName, finished=finished, total=total, finance=finance, code=code, team=team, management=management, time=time, pdf=f'static/{projectName}_REPORT.pdf')
 
 @views.route('/faq')
 @login_required
