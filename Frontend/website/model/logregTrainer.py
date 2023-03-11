@@ -73,7 +73,7 @@ def write_model_accuracy(y_test, y_predict, targetFilename):
 
 # Train the model to predict the given dependent-header, when receiving values for the independent headers.
 # Then, export the model to the file at model_save_dest and write its accuracy to the file at model_accuracy_dest.
-def train_model_and_dump(indep_headers, dep_header, model_save_dest, model_accuracy_dest):
+def train_model_and_dump(df, indep_headers, dep_header, model_save_dest, model_accuracy_dest):
 
     # Get the independent data as a matrix
     x = np.array(df[indep_headers])
@@ -107,13 +107,10 @@ def train_model_and_dump(indep_headers, dep_header, model_save_dest, model_accur
     dump(pipeLR, model_save_dest)
 
 
-# Run only if this file is called directly
-if __name__ == "__main__":
-    csvdata = "./data/trainDataStaged.csv"
-
+def train_all_models():
     # Open the project training/test data
-    df = pd.read_csv(csvdata)
-    print("Loaded Training File:", csvdata)
+    df = pd.read_csv(CSV_TRAINING_DATA)
+    print("Loaded Training File:", CSV_TRAINING_DATA)
 
     # Dependent field; the field we want to model to predict
     target_attr = 'Success'
@@ -126,4 +123,10 @@ if __name__ == "__main__":
     # dumping the trained model to the given destination file
     for (indep_hdrs, dep_hdr, (save_dest, accuracy_dest)) in modelParams:
         print("Training on dependent variable \'" + dep_hdr + "\'")
-        train_model_and_dump(indep_hdrs, dep_hdr, save_dest, accuracy_dest)
+        train_model_and_dump(df, indep_hdrs, dep_hdr, save_dest, accuracy_dest)
+
+
+# Run only if this file is called directly
+if __name__ == "__main__":
+    train_all_models()
+

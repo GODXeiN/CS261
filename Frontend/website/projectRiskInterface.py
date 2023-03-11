@@ -4,7 +4,8 @@ from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On,
 from .model import RiskAssessmentGenerator as RAG
 import pandas as pd
 from .model import projectDf as SimProject
-from .model.logregTrainer import CSV_TRAINING_DATA, train_all_models
+from .model.logregTrainer import CSV_TRAINING_DATA
+from .model.modelCrossTrainer import train_all_models
 from .model import SuccessReport
 from .model.dataManipulation import calc_ratio_safe
 from .gitLink import Git_Link as GitLinkObj
