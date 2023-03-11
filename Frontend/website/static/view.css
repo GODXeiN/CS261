@@ -1,10 +1,17 @@
+#nav{
+    position: relative;
+    width: 16%;
+    margin: 10% 0 0 7%;
+    float: left;
+}
+
 .navbar-expand-md .navbar-nav .nav-link {
     padding-right: initial;
 }
 .brand {
     position: absolute;
     left: 50%;
-    margin-left: -65px !important;  /* 50% of your logo width */
+    margin-left: -100px !important;  /* 50% of your logo width */
     display: block;
 }
 .confirm>button{
@@ -41,11 +48,82 @@ hr {
     clear: both;
     visibility: hidden;
 }
-img {
-    width: 120%; /* takes the 100 % width of its container (.box div)*/
-    height: 120%; /* takes the 100 % height of its container (.box div)*/
-    display:block;
+
+.colourRisk{
+    position: relative;
+    height: 15%;
+    width: 100%;
+    padding: 5px;
+    border-radius: 5px;
+    border: solid;
+    text-align: center;
 }
-ul {
-    list-style-type: none;
+
+.descriptionDiv{
+    border: solid;
+    background-color: #28242c;
+    border-radius: 8px;
+    margin-left: 19%;
+    margin-top: 6%;
+    height: 50%;
+    display: inline-block;
+}
+
+
+.descriptionDiv>h3{
+    text-align: center;
+}
+
+table, th, td{
+    border:solid;
+}
+
+th{
+    text-align: center;
+    font-family: "Helvetica";
+}
+
+table{
+    position: relative;
+    table-layout: auto;
+    border-color:#28242c;
+}
+
+
+.firstTR{
+    background-color:#687484 ;
+    color: #fff;
+    font-weight: normal;
+}
+
+.secondTR{
+    background-color:#687484 ;
+    color: #fff;
+
+}
+
+#buttons{
+    position: relative;
+    width: 20%;
+    margin-top: 30%;
+    margin-left: 40%;
+}
+
+.btn:hover{
+    background-color: #106cfc;
+    border-color: #106cfc;
+}
+
+#tab{
+    position: relative;
+    margin-left: 13%;
+}
+
+.thirdTR{
+    text-align: center;
+}
+
+.graph1{
+    position: absolute;
+    left: 23%;
 }

@@ -1,7 +1,7 @@
 .brand {
     position: absolute;
     left: 50%;
-    margin-left: -200px !important;  /* 50% of your logo width */
+    margin-left: -100px !important;  /* 50% of your logo width */
     display: block;
 }
 a:link {

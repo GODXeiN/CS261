@@ -18,7 +18,7 @@
     width: 175%;
     border-radius: 2vh;
     text-align: center;
-    height: 85vh;
+    height: 70vh;
     margin-top: -40%;
     
 }
@@ -27,8 +27,12 @@
     text-align: left;
 }
 
-
-.confirm>button:hover{
+.btn-primary{
+    position: relative;
+    top: 24%;
+    right: 22%;
+}
+.btn-primary:hover{
     background-color:  #97cba9;
     border-color:  #97cba9;
 }
@@ -56,9 +60,11 @@
 }
 
 .confirm{
-    position: absolute;
-    top: 88%;
-    right: 50%;
+    position: relative;
+    top: 10%;
+    right: 22%;
+    background-color: green;
+ 
 }
 
 body{
