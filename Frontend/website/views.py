@@ -184,7 +184,7 @@ def view():
         code = round(existingRisk.riskCode*100,2)
         team = round(existingRisk.riskTeam*100,2)
         management = round(existingRisk.riskManagement*100,2)
-        time = round(existingRisk.riskTeam*100,2)
+        time = round(existingRisk.riskTimescale*100,2)
         vis = visualise(pID)
         vis.overallRisk()
         vis.budget()
@@ -229,7 +229,7 @@ def view():
             code = round(existingRisk.riskCode*100,2)
             team = round(existingRisk.riskTeam*100,2)
             management = round(existingRisk.riskManagement*100,2)
-            time = round(existingRisk.riskTeam*100,2)
+            time = round(existingRisk.riskTimescale*100,2)
             vis = visualise(pID)
             vis.overallRisk()
             vis.budget()
@@ -244,7 +244,7 @@ def view():
     code = round(existingRisk.riskCode*100,2)
     team = round(existingRisk.riskTeam*100,2)
     management = round(existingRisk.riskManagement*100,2)
-    time = round(existingRisk.riskTeam*100,2)
+    time = round(existingRisk.riskTimescale*100,2)
     graphOne = os.path.join(os.getcwd(),'website','static')+'/risk.png'
     graphTwo = os.path.join(os.getcwd(),'website','static')+'/budget.png'
     logo = os.path.join(os.getcwd(),'website','static')+'/logo.png'
