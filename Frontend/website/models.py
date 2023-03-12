@@ -142,7 +142,7 @@ class Survey_Response(db.Model):
         self.projectID = projectID
         self.workerID = workerID
         self.date = date
-        self.mmanagementMetric = managementMetric
+        self.managementMetric = managementMetric
         self.commitmentMetric = commitmentMetric
         self.communicationMetric = communicationMetric
         self.happinessMetric = happinessMetric
