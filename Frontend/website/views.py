@@ -136,7 +136,9 @@ def end_project():
         db.session.add(end)
         db.session.add(new_metrics)
         db.session.commit()
-
+        pri = PRI.ProjectRiskInterface()
+        pri.add_project_to_training_data(pID)
+        pri.retrain_model()
         return redirect("/view")
 
     return render_template("end_project.html", projectName=projectName)
