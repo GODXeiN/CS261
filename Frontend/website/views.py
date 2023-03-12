@@ -1,4 +1,3 @@
-from __future__ import print_function # In python 2.7
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, Flask
 from flask_login import login_user, login_required, current_user
 from .models import Project, Git_Link, Hard_Metrics, Worker, Deadline, Works_On, End_Result, Survey_Response, Risk
@@ -9,7 +8,6 @@ from .suggestionSys import suggSys
 from . import projectRiskInterface as PRI
 from .model import RiskAssessment
 from fpdf import FPDF
-import sys
 import os
 from .visualise import visualise
 
