@@ -10,7 +10,7 @@ import sys
 
 from matplotlib.ticker import ScalarFormatter
 
-#Alter for more percision
+#Alter for more precision
 slices = 7
 
 class visualise():
