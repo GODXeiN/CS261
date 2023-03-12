@@ -6,7 +6,7 @@ import pandas as pd
 from .model import projectDf as SimProject
 from .model.logregTrainer import CSV_TRAINING_DATA
 from .model.modelCrossTrainer import train_all_models
-from .model import SuccessReport
+from .model import SuccessReport as succRep
 from .model.dataManipulation import calc_ratio_safe
 from .gitLink import Git_Link as GitLinkObj
 from sqlalchemy import func
@@ -147,7 +147,8 @@ class ProjectRiskInterface:
         # Append the given state to the Model's training data in CSV format
     def write_state_to_training_data(self, state):
         targetFile = open(CSV_TRAINING_DATA, "a")
-        targetFile.write(state.to_csv(lineterminator='\n', header=False))
+        stateAsRow = pd.DataFrame(state).T
+        targetFile.write(stateAsRow.to_csv(lineterminator='\n', header=False))
         targetFile.close()
 
 
@@ -157,11 +158,11 @@ class ProjectRiskInterface:
     def add_project_to_training_data(self, projectID):
         STATUS_FINISHED = 1
         STATUS_CANCELLED = 2 
-        status = Hard_Metrics.query(Hard_Metrics.status).filter_by(projectID = projectID).first()
-
+        status = Hard_Metrics.query.filter_by(projectID = projectID).order_by(Hard_Metrics.date.desc()).first().status
+        print(status)
         # If project finished, mark as success
         if status == STATUS_FINISHED:
-            succReport = SuccessReport()
+            succReport = succRep.SuccessReport()
             finalSurveyResponse = End_Result.query.filter_by(projectID = projectID).first()
 
             if finalSurveyResponse != None:
@@ -172,14 +173,14 @@ class ProjectRiskInterface:
                 team = finalSurveyResponse.teamMetric
                 succReport.set_success_values(finance, timescale, team, code, management)
 
-                projectState = self.get_project_state()
+                projectState = self.get_project_state(projectID)
                 succReport.add_binary_to_state(projectState)
 
                 self.write_state_to_training_data(projectState)
         # If project cancelled, mark as failure
         elif status == STATUS_CANCELLED:
-            succReport = SuccessReport()
-            projectState = self.get_project_state()
+            succReport = succRep.SuccessReport()
+            projectState = self.get_project_state(projectID)
             succReport.add_binary_to_state(projectState)
 
             self.write_state_to_training_data(projectState)
