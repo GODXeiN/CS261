@@ -394,7 +394,7 @@ def manage_devs():
             all_workers.append(email)
             
         if dev_email not in all_workers:
-            new_dev=Worker(emailAddr=dev_email, experienceRank=None)
+            new_dev=Worker(emailAddr=dev_email, experienceRank=None,planning=None)
             db.session.add(new_dev)
             new_worksOn=Works_On(projectID = session['pID'], workerID = Worker.query.filter_by(emailAddr=dev_email).order_by(Worker.workerID.desc()).first().workerID)
             db.session.add(new_worksOn)
